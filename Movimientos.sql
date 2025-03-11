@@ -27,7 +27,8 @@ with CantidadConFac as (
             end AS precio
             from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
                 join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
-)
+),
+UnionMovimientos AS (
 SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 	CASE 
             when XML_ETIQUETA2 is not null and XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then XML_ETIQUETA2 -- Conversion Score
@@ -254,6 +255,11 @@ FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposRenta T0
 	INNER JOIN adhemoeco_prueba.dbo.admAlmacenes A1 ON A1.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'ENUE'
 	INNER JOIN adhemoeco_prueba.dbo.admAlmacenes A2 ON A2.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'EREN'
 WHERE T0.PROPIETARIO = 'Hemoeco'
+)
+SELECT um.* FROM UnionMovimientos AS um
+JOIN Documentos AS d ON d.cIdDocumento = um.cIdDocumento
 GO
 
+--SELECT * FROM Movimientos
 
+--Grant Execute, view definition on dbo.Fecha to public;
