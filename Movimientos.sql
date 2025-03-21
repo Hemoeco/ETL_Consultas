@@ -15,7 +15,7 @@ with CantidadConFac as (
             case 
                 when con.MTIPO = 'Renta equipo' then
                     case XML_ETIQUETA2 
-                        when 'RENMES.' then 1 -- Caso específico de convertir cualquier cantidad de dias a 1 mes.
+                        when 'RENMES.' then 1 -- Caso especÃ­fico de convertir cualquier cantidad de dias a 1 mes.
                         else con.DIAS 
                     end
                 when con.DIAS<>0 and con.DELAL <> 'OTROS' then con.DIAS
@@ -71,12 +71,12 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 	'' AS cTextoExtra3,
 	case T0.DELAL 
 		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
+		when 'RefacciÃ³n' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cCostoEspecifico,
 	ISNULL(T5.DEPRECIACIONCONTABLEANTERIOR, 0) as cImporteExtra1,
 	case T0.DELAL
 		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
+		when 'RefacciÃ³n' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
 FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac AS T0
