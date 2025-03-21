@@ -24,20 +24,34 @@ with CantidadConFac as (
             case
                 when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
                 else con.PRECIOUNITARIO
-            end AS precio
+            end AS precio,
+			CASE
+				-- Conversiones especiales
+				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversión especial para 'MANIOBRA'
+				when f.XML_ETIQUETA2 <> 'MANIOBRA' AND f.XML_ETIQUETA2 is not null and f.XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then f.XML_ETIQUETA2 -- Conversion Score
+				--
+
+				WHEN con.IDEQUIPONUEVO + con.IDEQUIPOUSADO <> 0 or rtrim(con.DELAL)='Arrendadora' THEN 'MOD' + convert(varchar,con.IDLINEA)
+				WHEN con.IDREFACCION <> 0 THEN 'REF' + convert(varchar,con.IDREFACCION)
+				WHEN MTIPO = 'Anticipo' then 'ANT'
+				WHEN MTIPO = 'Renta Equipo' then 'REN'
+				ELSE 'SRV'
+			END AS codigoProducto
             from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
                 join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 ),
+descripcionCorregida as (
+	-- Quitar la primera palabra de la descripción si coincide con el nombre de producto de comercial.
+	-- E.g. 'RENTArenta' -> 'RENTA'
+	SELECT con.IDCONFAC AS IDCONFAC, 
+	rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, ' ' + SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
+	from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
+	JOIN CantidadConFac AS ccf ON ccf.IDCONFAC = con.IDCONFAC
+	LEFT JOIN adhemoeco_prueba.dbo.admProductos AS codSAT ON codSAT.CCODIGOPRODUCTO = ccf.codigoProducto
+),
 UnionMovimientos AS (
 SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
-	CASE 
-            when XML_ETIQUETA2 is not null and XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then XML_ETIQUETA2 -- Conversion Score
-            WHEN T0.IDEQUIPONUEVO + T0.IDEQUIPOUSADO <> 0 or rtrim(T0.DELAL)='Arrendadora' THEN 'MOD' + convert(varchar,T0.IDLINEA)
-            WHEN T0.IDREFACCION <> 0 THEN 'REF' + convert(varchar,T0.IDREFACCION)
-            WHEN MTIPO = 'Anticipo' then 'ANT'
-            WHEN MTIPO = 'Renta Equipo' then 'REN'
-            ELSE 'SRV'
-        END AS cCodigoProducto,
+	ccf.codigoProducto AS cCodigoProducto,
 	ccf.unidadesCapturadas AS cUnidadesCapturadas,
 	ccf.precio AS cPrecioCapturado,
 	convert(decimal(15,4), ccf.unidadesCapturadas * (T1.PORCENTAJEIVA/100) * ccf.precio) AS cImpuesto1,
@@ -54,8 +68,9 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 			end
 		  end
 		end AS cCodigoAlmacen,
-	rtrim(T0.DELAL) AS cReferencia, 
-    rtrim(T0.DESCRIPCION) + CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
+	rtrim(T0.DELAL) AS cReferencia,
+    dc.Descripcion 
+	+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
     + ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
 --	rtrim(T0.DESCRIPCION) AS cObservaMov,
 	--CASE WHEN T0.DIAS <> 0 THEN rtrim(T0.DELAL) ELSE '' END AS cTextoEx01,
@@ -82,6 +97,7 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac AS T0
 	join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
 	INNER JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
+	JOIN DescripcionCorregida AS dc ON dc.IDCONFAC = T0.IDCONFAC
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposNuevos T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposUsados AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
