@@ -10,21 +10,21 @@ GO
 
 ALTER VIEW [dbo].[Movimientos] AS
 with CantidadConFac as (
-        -- Convertir cCodigoProducto. Conversion Score
-        Select IDCONFAC,
-            case 
-                when con.MTIPO = 'Renta equipo' then
-                    case XML_ETIQUETA2 
-                        when 'RENMES.' then 1 -- Caso especÃ­fico de convertir cualquier cantidad de dias a 1 mes.
-                        else con.DIAS 
-                    end
-                when con.DIAS<>0 and con.DELAL <> 'OTROS' then con.DIAS
-                else con.CANTIDAD
-            end AS unidadesCapturadas,
-            case
-                when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
-                else con.PRECIOUNITARIO
-            end AS precio,
+		-- Convertir cCodigoProducto. Conversion Score
+		Select IDCONFAC,
+			case 
+				when con.MTIPO = 'Renta equipo' then
+					case XML_ETIQUETA2 
+						when 'RENMES.' then 1 -- Caso específico de convertir cualquier cantidad de dias a 1 mes.
+						else con.DIAS 
+					end
+				when con.DIAS<>0 and con.DELAL <> 'OTROS' then con.DIAS
+				else con.CANTIDAD
+			end AS unidadesCapturadas,
+			case
+				when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
+				else con.PRECIOUNITARIO
+			end AS precio,
 			CASE
 				-- Conversiones especiales
 				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversión especial para 'MANIOBRA'
@@ -37,14 +37,14 @@ with CantidadConFac as (
 				WHEN MTIPO = 'Renta Equipo' then 'REN'
 				ELSE 'SRV'
 			END AS codigoProducto
-            from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
-                join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
+			from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
+				join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 ),
 descripcionCorregida as (
 	-- Quitar la primera palabra de la descripción si coincide con el nombre de producto de comercial.
 	-- E.g. 'RENTArenta' -> 'RENTA'
 	SELECT con.IDCONFAC AS IDCONFAC, 
-	rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, ' ' + SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
+	' ' + rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
 	from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
 	JOIN CantidadConFac AS ccf ON ccf.IDCONFAC = con.IDCONFAC
 	LEFT JOIN adhemoeco_prueba.dbo.admProductos AS codSAT ON codSAT.CCODIGOPRODUCTO = ccf.codigoProducto
@@ -62,16 +62,16 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		case when T0.IDEQUIPONUEVO <> 0 or rtrim(T0.DELAL)='Arrendadora' then 'ENUE'
 			else case when T0.IDREFACCION <> 0 then 'REFA'
 				else case when T0.IDEQUIPOUSADO <> 0 then 'EUSA'
-				    else case when MTIPO = 'Anticipo' then 'ANT'
-					    else CASE WHEN MTIPO = 'Renta Equipo' then 'EREN' else 'OTR' end
+					else case when MTIPO = 'Anticipo' then 'ANT'
+						else CASE WHEN MTIPO = 'Renta Equipo' then 'EREN' else 'OTR' end
 				end
 			end
 		  end
 		end AS cCodigoAlmacen,
 	rtrim(T0.DELAL) AS cReferencia,
-    dc.Descripcion 
+	dc.Descripcion 
 	+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
-    + ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
+	+ ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
 --	rtrim(T0.DESCRIPCION) AS cObservaMov,
 	--CASE WHEN T0.DIAS <> 0 THEN rtrim(T0.DELAL) ELSE '' END AS cTextoEx01,
 	CASE 
@@ -80,18 +80,18 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		ELSE '' 
 		END AS cTextoExtra1,
 	CASE 
-            WHEN (T1.XML_TOTAL = 1 or T1.XML_TOTAL is null) and T4.IDEQUIPO is not null then 'Num. Int.: ' + rtrim(T4.NUMEROINTERNO) 
-            else '' 
-        end AS cTextoExtra2,
+			WHEN (T1.XML_TOTAL = 1 or T1.XML_TOTAL is null) and T4.IDEQUIPO is not null then 'Num. Int.: ' + rtrim(T4.NUMEROINTERNO) 
+			else '' 
+		end AS cTextoExtra2,
 	'' AS cTextoExtra3,
 	case T0.DELAL 
 		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'RefacciÃ³n' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
+		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cCostoEspecifico,
 	ISNULL(T5.DEPRECIACIONCONTABLEANTERIOR, 0) as cImporteExtra1,
 	case T0.DELAL
 		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'RefacciÃ³n' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
+		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
 FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac AS T0
@@ -108,7 +108,7 @@ UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 			 ELSE CASE WHEN MTIPO = 'Renta Equipo' then 'REN' ELSE 'SRV' END
 			 END
 	END END AS cCodigoProducto, 
-    T0.CANTIDAD AS cUnidades,
+	T0.CANTIDAD AS cUnidades,
 	T0.IMPORTE / T0.CANTIDAD AS cPrecio,
 	(case when T1.DESGLOSARIVA='N' then 0 else case when T1.PORCENTAJEIVA=11 then 16 else T1.PORCENTAJEIVA end /100 end) * T0.CANTIDAD * T0.IMPORTE / T0.CANTIDAD AS cImpuesto1,
 	case when T1.DESGLOSARIVA='N' then 0 else case when T1.PORCENTAJEIVA=11 then 16 else T1.PORCENTAJEIVA end end AS cPorcentajeImpuesto1,
@@ -124,7 +124,7 @@ UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 		end AS cCodigoAlmacen,
 	--rtrim(T2.DELAL) AS cReferencia, 
 	rtrim(SUBSTRING(T2.DELAL, 1, CHARINDEX('-', T2.DELAL))+' '+ substring(T2.DELAL, CHARINDEX('-', T2.DELAL)+1, LEN(T2.DELAL))) AS cReferencia, 
-    case when T0.TIPO='Anticipo' then 'Anticipo' else rtrim(T2.DESCRIPCION) end AS cObservaMov,
+	case when T0.TIPO='Anticipo' then 'Anticipo' else rtrim(T2.DESCRIPCION) end AS cObservaMov,
 	convert(varchar, T0.IDCONNOT) AS cTextoExtra1,
 	'' AS cTextoExtra2,
 	rtrim(T0.TIPO) AS cTextoExtra3,
@@ -156,7 +156,7 @@ UNION ALL SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	isnull(T0.RETENCIONIVA, 0) as cPorcentajeRetencion2,
 	REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + case when T0.IDREFACCION <> 0 then 'REFA' else case when T0.IDMODELO <> 0 then 'ENUE' else 'GTOS' end end AS cCodigoAlmacen,
 	convert(varchar,T0.IDCONRM) AS cReferencia, 
-    isnull(rtrim(T2.DESCRIPCION) + ' ' + rtrim(T2.CODIGO),'') + isnull(rtrim(T3.NOMBRE) + ' ' + rtrim(T3.MARCA) + ' ' + rtrim(T3.DESCRIPCION),'') AS cObservaMov,
+	isnull(rtrim(T2.DESCRIPCION) + ' ' + rtrim(T2.CODIGO),'') + isnull(rtrim(T3.NOMBRE) + ' ' + rtrim(T3.MARCA) + ' ' + rtrim(T3.DESCRIPCION),'') AS cObservaMov,
 	convert(varchar, isnull(T0.IDMODELO,0) + isnull(T0.IDREFACCION,0)) AS cTextoExtra1,
 	'' AS cTextoExtra2,
 	'' AS cTextoExtra3,
@@ -178,7 +178,7 @@ SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	S1.PORCENTAJEIVA AS cPorcent01,
 	REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + case when T0.IDREFACCION <> 0 then 'REFA' else case when T0.IDMODELO <> 0 then 'ENUE' else 'TRAN' end end AS cCodigoAlmacen,
 	convert(varchar,T0.IDCONDEV) AS cReferencia, 
-    isnull(rtrim(T2.DESCRIPCION) + ' ' + rtrim(T2.CODIGO),'') + isnull(rtrim(T3.NOMBRE) + ' ' + rtrim(T3.MARCA) + ' ' + rtrim(T3.DESCRIPCION),'') AS cObservaMov,
+	isnull(rtrim(T2.DESCRIPCION) + ' ' + rtrim(T2.CODIGO),'') + isnull(rtrim(T3.NOMBRE) + ' ' + rtrim(T3.MARCA) + ' ' + rtrim(T3.DESCRIPCION),'') AS cObservaMov,
 	convert(varchar, isnull(T0.IDMODELO,0) + isnull(T0.IDREFACCION,0)) AS cTextoEx01,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
@@ -204,7 +204,7 @@ SELECT 'ODT' + rtrim(T0.ORDENESTRABAJONUMERO) AS cIdDocumento,
 	0 as cPorcentajeRetencion2,
 	REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + 'REFA' AS cCodigoAlmacen,
 	convert(varchar,T0.IDOTREFACCIONES) AS cReferencia, 
-    '' AS cObservaMov,
+	'' AS cObservaMov,
 	'' AS cTextoEx0tra,
 	'' AS cTextoExtra2,
 	'' AS cTextoExtra3,
@@ -227,7 +227,7 @@ union SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	0 as cPorcentajeRetencion2,
 	A2.CCODIGOALMACEN AS cCodigoAlmacen,
 	convert(varchar,T0.IDREQUISICION) AS cReferencia, 
-    '' AS cObservaMov,
+	'' AS cObservaMov,
 	convert(varchar, T1.IDCONREQ) AS cTextoEx01,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
@@ -259,7 +259,7 @@ UNION SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	0 as cPorcentajeRetencion2,
 	A1.CCODIGOALMACEN AS cCodigoAlmacen,
 	convert(varchar,T0.NUMEROINTERNO) AS cReferencia, 
-    '' AS cObservaMov,
+	'' AS cObservaMov,
 	'' AS cTextoEx01,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
