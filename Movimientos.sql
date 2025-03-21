@@ -15,7 +15,7 @@ with CantidadConFac as (
 			case 
 				when con.MTIPO = 'Renta equipo' then
 					case XML_ETIQUETA2 
-						when 'RENMES.' then 1 -- Caso espec韋ico de convertir cualquier cantidad de dias a 1 mes.
+						when 'RENMES.' then 1 -- Caso espec铆fico de convertir cualquier cantidad de dias a 1 mes.
 						else con.DIAS 
 					end
 				when con.DIAS<>0 and con.DELAL <> 'OTROS' then con.DIAS
@@ -27,7 +27,7 @@ with CantidadConFac as (
 			end AS precio,
 			CASE
 				-- Conversiones especiales
-				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversi髇 especial para 'MANIOBRA'
+				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversi贸n especial para 'MANIOBRA'
 				when f.XML_ETIQUETA2 <> 'MANIOBRA' AND f.XML_ETIQUETA2 is not null and f.XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then f.XML_ETIQUETA2 -- Conversion Score
 				--
 
@@ -41,7 +41,7 @@ with CantidadConFac as (
 				join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 ),
 descripcionCorregida as (
-	-- Quitar la primera palabra de la descripci髇 si coincide con el nombre de producto de comercial.
+	-- Quitar la primera palabra de la descripci贸n si coincide con el nombre de producto de comercial.
 	-- E.g. 'RENTArenta' -> 'RENTA'
 	SELECT con.IDCONFAC AS IDCONFAC, 
 	' ' + rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
@@ -86,12 +86,12 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 	'' AS cTextoExtra3,
 	case T0.DELAL 
 		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'Refacci髇' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
+		when 'Refacci贸n' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cCostoEspecifico,
 	ISNULL(T5.DEPRECIACIONCONTABLEANTERIOR, 0) as cImporteExtra1,
 	case T0.DELAL
 		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'Refacci髇' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
+		when 'Refacci贸n' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
 FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac AS T0
