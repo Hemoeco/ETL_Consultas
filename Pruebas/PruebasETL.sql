@@ -50,3 +50,9 @@ Select top 3 * from admProductos where CCODIGOPRODUCTO like 'MOD%'
 
 --SELECT top 1 * FROM Movimientos
 -- Select distinct MTIPO From [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac
+
+-- Ver claves SAT por defecto
+Select p.CCODIGOPRODUCTO, p.CNOMBREPRODUCTO, p.CCLAVESAT, u.CNOMBREUNIDAD, u.CCLAVEINT as ClaveUnidad
+    from admProductos as p
+        join admUnidadesMedidaPeso as u on p.CIDUNIDADBASE = u.CIDUNIDAD
+    where p.CCODIGOPRODUCTO in ('REN', 'SRV')
