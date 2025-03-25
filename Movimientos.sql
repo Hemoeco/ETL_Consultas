@@ -40,15 +40,6 @@ with CantidadConFac as (
 			from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
 				join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 ),
-descripcionCorregida as (
-	-- Quitar la primera palabra de la descripción si coincide con el nombre de producto de comercial.
-	-- E.g. 'RENTArenta' -> 'RENTA'
-	SELECT con.IDCONFAC AS IDCONFAC, 
-	' ' + rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
-	from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
-	JOIN CantidadConFac AS ccf ON ccf.IDCONFAC = con.IDCONFAC
-	LEFT JOIN adhemoeco_prueba.dbo.admProductos AS codSAT ON codSAT.CCODIGOPRODUCTO = ccf.codigoProducto
-),
 UnionMovimientos AS (
 SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 	ccf.codigoProducto AS cCodigoProducto,
@@ -69,7 +60,7 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		  end
 		end AS cCodigoAlmacen,
 	rtrim(T0.DELAL) AS cReferencia,
-	dc.Descripcion 
+	dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
 	+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
 	+ ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
 --	rtrim(T0.DESCRIPCION) AS cObservaMov,
@@ -94,14 +85,20 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
+	-- ---------------------------------------------
+	-- -- Test  dbo.fn_AdaptarDescripcionObservacion
+	-- , Concat(dc.cNombreProducto, dc.Descripcion) as DescCorregida
+	-- , dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, dc.cNombreProducto) as DescrAdaptada
+	-- , T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, dc.cNombreProducto, T0.IDCONFAC
+	-- ---------------------------------------------
 FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac AS T0
 	join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
 	INNER JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
-	JOIN DescripcionCorregida AS dc ON dc.IDCONFAC = T0.IDCONFAC
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposNuevos T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposUsados AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
 	LEFT JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.OperOTRefacciones AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES
+	LEFT JOIN adhemoeco_prueba.dbo.admProductos AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)
 		ELSE CASE WHEN T2.IDREFACCION <> 0 THEN 'REF' + convert(varchar, T2.IDREFACCION)
@@ -273,9 +270,25 @@ FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.CataEquiposRenta T0
 WHERE T0.PROPIETARIO = 'Hemoeco'
 )
 SELECT um.* FROM UnionMovimientos AS um
-JOIN Documentos AS d ON d.cIdDocumento = um.cIdDocumento
+ JOIN Documentos AS d ON d.cIdDocumento = um.cIdDocumento
 GO
 
+-- Test results
 --SELECT * FROM Movimientos
 
 --Grant Execute, view definition on dbo.Fecha to public;
+
+---------------------------------------------
+-- Test  dbo.fn_AdaptarDescripcionObservacion
+-- Select DescCorregida, DescrAdaptada, IIF(DescCorregida <> DescrAdaptada, 'Error', 'Exito') as compara
+--   , MTIPO, DESCRIPCION, codigoProducto, cNombreProducto, IDCONFAC
+--   FROM UnionMovimientos
+-- Select * from Movimientos_test where compara <> 'exito' -- order by IDCONFAC desc 
+---------------------------------------------
+
+-- Test with function integrated
+-- SELECT top 1000 * FROM Movimientos
+--    where cReferencia = 'Renta'
+--    order by cIdDocumento desc
+-- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
+-- where cIdDocumento in ('FAC466140','FAC466141','FAC460101','FAC451204','FAC449199','FAC445635','FAC424797','FAC428267','FAC428268','FAC428489','FAC428490','FAC402271','FAC404898','FAC409615','FAC412969','FAC414075')
