@@ -40,14 +40,21 @@ with CantidadConFac as (
 			from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
 				join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 ),
-descripcionCorregida as (
+descripcionCorregida_interna as (
 	-- Quitar la primera palabra de la descripción si coincide con el nombre de producto de comercial.
 	-- E.g. 'RENTArenta' -> 'RENTA'
-	SELECT con.IDCONFAC AS IDCONFAC, 
-	' ' + rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
+	SELECT con.IDCONFAC AS IDCONFAC, FACTURASNUMERO, MTIPO, codSAT.cNombreProducto as cNombreProducto,
+	rtrim(IIf(charindex(codSAT.cNombreProducto, DESCRIPCION) = 1, SUBSTRING(DESCRIPCION, LEN(codSAT.cNombreProducto) + 1, LEN(DESCRIPCION)), DESCRIPCION)) AS Descripcion
 	from [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac as con
 	JOIN CantidadConFac AS ccf ON ccf.IDCONFAC = con.IDCONFAC
 	LEFT JOIN adhemoeco_prueba.dbo.admProductos AS codSAT ON codSAT.CCODIGOPRODUCTO = ccf.codigoProducto
+),
+descripcionCorregida as (
+	SELECT con.IDCONFAC AS IDCONFAC, cNombreProducto,
+	-- Agregar espacio al inicio si es necesario
+	Concat(IIF((MTIPO = 'Renta Equipo' and f.XML_ETIQUETA2 = 'RENTA.') or substring(Descripcion, 1, 1) = ' ', '', ' '), Descripcion) AS Descripcion
+	from descripcionCorregida_interna as con
+		join [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 ),
 UnionMovimientos AS (
 SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
@@ -94,6 +101,12 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
+	-- ---------------------------------------------
+	-- -- Test  dbo.fn_AdaptarDescripcionObservacion
+	-- , Concat(dc.cNombreProducto, dc.Descripcion) as DescCorregida
+	-- , dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, dc.cNombreProducto) as DescrAdaptada
+	-- , T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, dc.cNombreProducto, T0.IDCONFAC
+	-- ---------------------------------------------
 FROM [192.168.111.14].IT_Rentas_Pruebas.dbo.OperConFac AS T0
 	join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
 	INNER JOIN [192.168.111.14].IT_Rentas_Pruebas.dbo.OperFacturas AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
@@ -276,6 +289,15 @@ SELECT um.* FROM UnionMovimientos AS um
 JOIN Documentos AS d ON d.cIdDocumento = um.cIdDocumento
 GO
 
+-- Test results
 --SELECT * FROM Movimientos
+
+---------------------------------------------
+-- Test  dbo.fn_AdaptarDescripcionObservacion
+-- Select DescCorregida, DescrAdaptada, IIF(DescCorregida <> DescrAdaptada, 'Error', 'Exito') as compara
+--   , MTIPO, DESCRIPCION, codigoProducto, cNombreProducto, IDCONFAC
+--   FROM UnionMovimientos
+-- Select * from Movimientos_test where compara <> 'exito' -- order by IDCONFAC desc 
+---------------------------------------------
 
 --Grant Execute, view definition on dbo.Fecha to public;
