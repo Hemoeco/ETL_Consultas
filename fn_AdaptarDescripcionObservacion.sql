@@ -15,8 +15,8 @@
 CREATE OR ALTER FUNCTION dbo.fn_AdaptarDescripcionObservacion(
     @MTIPO CHAR(15),              -- OperConFac
     @Descripcion VARCHAR(MAX),    -- OperConFac.Descripcion --> admMovimientos.cObservaMov
-    @cCodigoProducto VARCHAR(30), -- admProductos
-    @cNombreProducto VARCHAR(60)  -- admProductos
+    @cCodigoProducto VARCHAR(30), -- View_CodigosSAT_ETL / admProductos
+    @cNombreProducto VARCHAR(60)  -- View_CodigosSAT_ETL / admProductos
 )
 RETURNS VARCHAR(MAX)
 AS
