@@ -1,8 +1,11 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE VIEW [dbo].[Documentos] AS
+/* ----------------------------------------------------
+-- Hemoeco Renta (2025)
+-- Script: Documentos.sql
+-- Vista para la consulta de documentos
+-- lee los documentos de Score para importarlso a Comercial
+ ---------------------------------------------------- */
+
+ALTER VIEW [dbo].[Documentos] AS
 -- Facturas
 SELECT 'FAC' + CONVERT(varchar, IDFACTURA) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
