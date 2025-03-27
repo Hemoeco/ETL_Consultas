@@ -2,11 +2,11 @@
 -- Hemoeco Renta (2025)
 -- Script: Documentos.sql
 -- Vista para la consulta de documentos
--- lee los documentos de Score para importarlso a Comercial
+-- lee los documentos de Score para importarlos a Comercial
  ---------------------------------------------------- */
 
 ALTER VIEW [dbo].[Documentos] AS
--- Facturas
+with Facturas as (
 SELECT 'FAC' + CONVERT(varchar, IDFACTURA) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
 	--CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA + T4.DIASCREDITO), 101) AS cFechaVencimiento, 
@@ -42,21 +42,17 @@ SELECT 'FAC' + CONVERT(varchar, IDFACTURA) AS cIdDocumento,
 	'' as cCodigoProyecto,
 	'' as cDestinatario,
 	'' as cNumeroGuia
-FROM [192.168.111.14].IT_Rentas.dbo.OperFacturas T0
-	INNER JOIN [192.168.111.14].IT_Rentas.dbo.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
-	INNER JOIN [192.168.111.14].IT_Rentas.dbo.CataClientes T3 ON T3.IDCLIENTE = T0.CLIENTESNUMERO
-	INNER JOIN [192.168.111.14].IT_Rentas.dbo.CataClientesSucursal T4 ON T4.IDNUMERO = T0.CLIENTESNUMERO AND T4.IDSUCURSAL = T0.IDSUCURSAL
-	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admConceptos AS T06 ON T06.CCODIGOCONCEPTO = CASE WHEN T0.CLIENTESNUMERO IN (10933, 670) THEN 'PE' ELSE 'FACC' END + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END  + '40'
-	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataObras T2 ON T2.IDCLIENTE = T0.CLIENTESNUMERO AND T2.NUMERO = T0.OBRASNUMERO
-	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos AS T08 ON T08.CIDCONCEPTODOCUMENTO = T06.CIDCONCEPTODOCUMENTO AND T08.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDFACTURA) COLLATE Modern_Spanish_CI_AS
-	LEFT JOIN ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio AS T9 ON T9.MOneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHA)
-WHERE T0.TOTAL <> 0
-  AND T0.CANCELADA = 'N'
-  AND T0.FOLIO2 = ''
-  AND T0.PROCESADA = 'N'
---  AND ISNULL(T4.FORMADEPAGO,'')<>''
-  AND YEAR(dbo.fecha(T0.FECHA)) >= 2022
---  AND (datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) = 0 AND T0.PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
+FROM Score.FacturaPorTimbrar T0
+	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
+	INNER JOIN Score.Cliente T3 ON T3.IDCLIENTE = T0.CLIENTESNUMERO
+	INNER JOIN Score.ClienteSucursal T4 ON T4.IDNUMERO = T0.CLIENTESNUMERO AND T4.IDSUCURSAL = T0.IDSUCURSAL
+	INNER JOIN Comercial.Concepto AS T06 ON T06.CCODIGOCONCEPTO = CASE WHEN T0.CLIENTESNUMERO IN (10933, 670) THEN 'PE' ELSE 'FACC' END + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END  + '40'
+	LEFT JOIN Score.Obra T2 ON T2.IDCLIENTE = T0.CLIENTESNUMERO AND T2.NUMERO = T0.OBRASNUMERO
+	LEFT JOIN Comercial.Documento AS T08 ON T08.CIDCONCEPTODOCUMENTO = T06.CIDCONCEPTODOCUMENTO AND T08.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDFACTURA) COLLATE Modern_Spanish_CI_AS
+	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.MOneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHA)
+)
+-- Facturas
+SELECT * FROM Facturas
 -- Notas de credito
 UNION SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
@@ -96,7 +92,7 @@ UNION SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
 	'' as cNumeroGuia
 FROM [192.168.111.14].IT_Rentas.dbo.OperNotasCredito T0
 	INNER JOIN [192.168.111.14].IT_Rentas.dbo.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
-	INNER JOIN [192.168.111.14].IT_Rentas.dbo.Operfacturas T2 ON T0.IDFACTURA = T2.IDFACTURA
+	INNER JOIN Score.Factura T2 ON T0.IDFACTURA = T2.IDFACTURA
 	INNER JOIN (select S0.IDNOTASCREDITO, max(S0.TIPO) as TIPO, count(distinct S0.TIPO) as Num, max(S1.MTIPO) as TIPO2
 				from [192.168.111.14].IT_Rentas.dbo.OperConNot S0
 					inner join [192.168.111.14].IT_Rentas.dbo.OperConFac S1 on S0.IDCONFAC = S1.IDCONFAC
@@ -424,7 +420,7 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperDepositos OD
 					convert(decimal(10,2), sum(CASE WHEN (LEFT(T2.Moneda, 1) = 'P') THEN 1 ELSE T2.TIPOCAMBIO END * T2.IVA * OFP.IMPORTE/T2.TOTAL)) as IVA
 				from [192.168.111.14].IT_Rentas.dbo.OperPagos OP
 					inner join [192.168.111.14].IT_Rentas.dbo.OperFacPag OFP on OFP.PAGOSNUMERO = OP.NUMERO
-					inner join [192.168.111.14].IT_Rentas.dbo.OperFacturas T2 on OFP.FACTURASNUMERO = T2.IDFACTURA
+					inner join Score.Factura T2 on OFP.FACTURASNUMERO = T2.IDFACTURA
 				where T2.TOTAL <> 0
 				group by OP.DEPOSITOSNUMERO) TX on TX.DEPOSITOSNUMERO = OD.IDDEPOSITO
 	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admParametros M0 on M0.CIDEMPRESA>0
@@ -435,3 +431,7 @@ where dbo.fecha(OD.FECHA) >='20220101'
  --AND OD.IDDEPOSITO=386326
 and '10' <> case when TX.PUE>0 or OD.IMPORTE*CASE WHEN (LEFT(OD.Moneda, 1) = 'P') THEN 1 ELSE OD.TIPOCAMBIO END < 10 then '10' else 'PPD' end  -- se comenta para poder contabilizar los pagos PUE
 GO
+
+-- -- Tests
+-- Select top 10 * from Documentos
+-- Select top 10 * from Documentos where cIdDocumento like 'FAC%'

@@ -1,8 +1,11 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE Function [dbo].[Fecha](@Fecha Int) Returns dateTime
+/* ----------------------------------------------------
+-- Hemoeco Renta (2025)
+--
+-- FUnción para calcula fecha (datetime) a partir de un
+-- entero untilizado por Score (Clarion)
+ ---------------------------------------------------- */
+ 
+ CREATE Function [dbo].[Fecha](@Fecha Int) Returns dateTime
    AS
     Begin
       Declare @FechaJul DateTime
@@ -14,3 +17,8 @@ CREATE Function [dbo].[Fecha](@Fecha Int) Returns dateTime
     End 
 
 GO
+
+-- -- Tests
+-- -- To run test, just uncomment 
+-- print Concat('Fecha(0) = ', dbo.Fecha(0)) -- null
+-- print Concat('Fecha(80723) = ', dbo.Fecha(80723)) -- 2022-01-01 00:00:00.000

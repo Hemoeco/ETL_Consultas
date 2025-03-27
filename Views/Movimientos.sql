@@ -1,8 +1,11 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE VIEW [dbo].[Movimientos] AS
+/* ----------------------------------------------------
+-- Hemoeco Renta (2025)
+-- Script: Documentos.sql
+-- Vista para la consulta de documentos
+-- lee los documentos de Score para importarlos a Comercial
+------------------------------------------------------- */
+
+ALTER VIEW [dbo].[Movimientos_test] AS
 with CantidadConFac as (
         -- Convertir cCodigoProducto. Conversion Score
         Select IDCONFAC,
@@ -19,9 +22,10 @@ with CantidadConFac as (
                 when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
                 else con.PRECIOUNITARIO
             end AS precio
-            from [192.168.111.14].IT_Rentas.dbo.OperConFac as con
-                join [192.168.111.14].IT_Rentas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
-)
+            FROM Score.ConFac as con
+                join Score.Factura as f on f.IDFACTURA = con.FACTURASNUMERO
+),
+ConFacPorTimbrar as (
 SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 	CASE 
             when XML_ETIQUETA2 is not null and XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then XML_ETIQUETA2 -- Conversion Score
@@ -72,13 +76,16 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
-FROM [192.168.111.14].IT_Rentas.dbo.OperConFac AS T0
+FROM Score.ConFac AS T0
 	join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
-	INNER JOIN [192.168.111.14].IT_Rentas.dbo.OperFacturas AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
-	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposNuevos T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
-	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
-	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposUsados AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
-	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES
+	INNER JOIN Score.FacturaPorTimbrar AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
+	LEFT JOIN Score.EquipoNuevo T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
+	LEFT JOIN Score.EquipoRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
+	LEFT JOIN Score.EquipoUsado AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
+	LEFT JOIN Score.OTRefaccion AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
+)
+-- Movimientos/Conceptos de Factura
+SELECT * FROM ConFacPorTimbrar
 UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)
 		ELSE CASE WHEN T2.IDREFACCION <> 0 THEN 'REF' + convert(varchar, T2.IDREFACCION)
@@ -114,7 +121,7 @@ UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	'' as cSCMovto
 FROM [192.168.111.14].IT_Rentas.dbo.OperConNot T0
 	INNER JOIN [192.168.111.14].IT_Rentas.dbo.OperNotasCredito T1 ON T0.IDNOTASCREDITO = T1.IDNOTASCREDITO
-	INNER JOIN [192.168.111.14].IT_Rentas.dbo.OperConFac T2 ON T0.IDCONFAC = T2.IDCONFAC
+	INNER JOIN Score.ConFac T2 ON T0.IDCONFAC = T2.IDCONFAC
 	LEFT OUTER JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposNuevos AS S2 ON T2.IDEQUIPONUEVO = S2.IDEQUIPO AND T2.DELAL = 'Venta'
 	LEFT OUTER JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposRenta AS S3 ON T2.IDEQUIPORENTA = S3.IDEQUIPO AND T2.DELAL = 'Venta'
 	LEFT OUTER JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposUsados AS S4 ON T2.IDEQUIPOUSADO = S4.IDEQUIPO AND T2.DELAL = 'Venta'
@@ -249,3 +256,7 @@ FROM [192.168.111.14].IT_Rentas.dbo.CataEquiposRenta T0
 	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admAlmacenes A2 ON A2.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'EREN'
 WHERE T0.PROPIETARIO = 'Hemoeco'
 GO
+
+-- -- Tests
+--  Select top 10 * from Movimientos_test
+--  Select top 10 * from Movimientos_test where cIdDocumento like 'FAC%'
