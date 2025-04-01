@@ -90,7 +90,7 @@ UNION SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
 	null as cUUID,
 	case rtrim(T6.TIPO2)
 		when 'Renta Equipo' then '4210100002'
-		when 'Refacción' then '4120100002'
+		when 'RefacciÃ³n' then '4120100002'
 		when 'Otros' then '4310100002'
 		when 'Venta Nuevo' then '4110100002'
 		when 'Servicio a Obra' then '4310100002'
@@ -181,7 +181,7 @@ SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
 	T0.IDSUCURSAL AS cImporteExtra1,
-	'Devolución ' + CONVERT(varchar, T0.IDDEVOLUCION) + ', proveedor: ' + CONVERT(varchar, T0.IDPROVEEDOR) + ', ' + rtrim(T6.TIPODOCUMENTO) + ': ' + rtrim(CONVERT(varchar, T6.NUMERODOCUMENTO)) AS cObservaciones,
+	'DevoluciÃ³n ' + CONVERT(varchar, T0.IDDEVOLUCION) + ', proveedor: ' + CONVERT(varchar, T0.IDPROVEEDOR) + ', ' + rtrim(T6.TIPODOCUMENTO) + ': ' + rtrim(CONVERT(varchar, T6.NUMERODOCUMENTO)) AS cObservaciones,
 	'(Ninguno)' AS cCodigoAgente,
 	'' AS cNumeroG01, 
 	'' AS cNumCtaPag,
@@ -268,7 +268,7 @@ SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
 	T0.IDSUCURSALORIGEN AS cImporteExtra1,
-	'Requisición ' + CONVERT(varchar, T0.IDREQUISICION) + ', sucursal: ' + rtrim(T1.INICIALES) AS cObservaciones,
+	'RequisiciÃ³n ' + CONVERT(varchar, T0.IDREQUISICION) + ', sucursal: ' + rtrim(T1.INICIALES) AS cObservaciones,
 	'(Ninguno)' AS cCodigoAgente,
 --	'' AS cNumeroG01, 
 	'' AS cNumCtaPag,
