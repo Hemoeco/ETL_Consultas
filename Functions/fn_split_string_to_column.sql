@@ -37,3 +37,8 @@ BEGIN
 END
 
 GO
+
+Grant select, view definition on OBJECT::dbo.[fn_split_string_to_column] to public;
+
+-- -- Test
+-- Select * from dbo.fn_split_string_to_column('Hola|mundo|cruel', '|')

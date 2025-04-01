@@ -18,6 +18,8 @@
 
 GO
 
+Grant Execute, view definition on dbo.Fecha to public;
+
 -- -- Tests
 -- -- To run test, just uncomment 
 -- print Concat('Fecha(0) = ', dbo.Fecha(0)) -- null

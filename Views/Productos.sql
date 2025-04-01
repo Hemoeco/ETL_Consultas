@@ -5,7 +5,7 @@
 -- lee los documentos de Score para importarlos a Comercial
 ------------------------------------------------------- */
 
-ALTER VIEW [dbo].[Productos] AS
+CREATE or ALTER VIEW [dbo].[Productos] AS
 select T0.*
 from (SELECT 'REF' + convert(varchar,IDREFACCION) AS cCodigoProducto,
 	'VENTA REFACCION' AS cNombreProducto,
