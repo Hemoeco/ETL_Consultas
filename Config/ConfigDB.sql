@@ -53,6 +53,9 @@ BEGIN
    -- @rmtpassword = '';
 END
 
+-- Enable RPC to be able to query data in Score server from ETL database (see Pruebas\TestCallConFac.sql)
+EXEC sp_serveroption @server=@SERVER_NAME, @optname=N'RPC out', @optvalue=N'true'
+
 -- print schema_id('Score')
 if schema_id('Score') is null
 begin

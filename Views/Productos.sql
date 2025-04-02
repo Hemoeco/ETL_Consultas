@@ -42,7 +42,16 @@ UNION SELECT 'REN' AS cCodigoProducto,
 	1 AS cControlExistencia,
 	'DIA(S)' AS cNombreUnidadBase,
 	0 AS cImpuesto1,
-    '72141700' as cClaveSAT) as T0
+    '72141700' as cClaveSAT
+UNION SELECT 'MREN' AS cCodigoProducto, -- usado en XML_ETIQUETA2 para utilizar código mes
+            'RENTA' AS cNombreProducto,
+            3 AS cTipoProducto,
+            7 AS cMetodoCosteo,
+            1 AS cControlExistencia,
+            'MES(ES)' AS cNombreUnidadBase, -- todo: validar este campo
+            --N'MON - Mes' as ClaveUnidadSAT,
+            0 AS cImpuesto1,
+            '72141700' as cClaveSAT) as T0
 left join Comercial.Producto T5 on T0.cCodigoProducto = T5.cCodigoProducto and T0.cTipoProducto = T5.cTipoProducto and T0.cNombreProducto = T5.cNombreProducto and T0.cClaveSAT = T5.cClaveSAT
 where T5.cidproducto is null
 GO

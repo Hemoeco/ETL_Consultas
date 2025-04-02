@@ -441,3 +441,5 @@ GO
 -- -- Tests
 -- Select top 10 * from Documentos
 -- Select top 10 * from Documentos where cIdDocumento like 'FAC%'
+-- SELECT * FROM Documentos
+-- SELECT TOP(10) * FROM admProductos WHERE cCodigoProducto LIKE 'mod%'

@@ -154,7 +154,7 @@ As
         AND FOLIO2 = ''
         AND PROCESADA = 'N'
         --  AND ISNULL(T4.FORMADEPAGO,'')<>''
-        AND FECHA >= 80723 -- 2022-01-01 00:00:00.000
+        AND FECHA >= 81819 -- 01/01/2025 --> AND YEAR(dbo.fecha(T0.FECHA)) >= 2022
         --  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
 GO
 
