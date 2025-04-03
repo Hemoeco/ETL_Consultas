@@ -7,8 +7,8 @@
 
 CREATE OR ALTER VIEW [dbo].[Movimientos] AS
 with CantidadConFac as (
-		-- Convertir cCodigoProducto. Conversion Score
-		Select IDCONFAC,
+	-- Convertir cCodigoProducto. Conversion Score
+	Select IDCONFAC,
 			case 
 				when con.MTIPO = 'Renta equipo' then
 					case XML_ETIQUETA2 
@@ -21,12 +21,7 @@ with CantidadConFac as (
 			case
 				when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
 				else con.PRECIOUNITARIO
-            end AS precio
-            FROM Score.ConFac as con
-                join Score.Factura as f on f.IDFACTURA = con.FACTURASNUMERO
-),
-ConFacPorTimbrar as (
-SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
+			end AS precio,
 			CASE
 				-- Conversiones especiales
 				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversión especial para 'MANIOBRA'
@@ -38,7 +33,13 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 				WHEN MTIPO = 'Anticipo' then 'ANT'
 				WHEN MTIPO = 'Renta Equipo' then 'REN'
 				ELSE 'SRV'
-        END AS cCodigoProducto,
+			END AS codigoProducto
+		FROM Score.ConFac as con
+			join Score.FacturaPorTimbrar as f on f.IDFACTURA = con.FACTURASNUMERO
+),
+ConFacPorTimbrar as (
+SELECT Concat('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
+	ccf.codigoProducto as cCodigoProducto,
 	ccf.unidadesCapturadas AS cUnidadesCapturadas,
 	ccf.precio AS cPrecioCapturado,
 	convert(decimal(15,4), ccf.unidadesCapturadas * (T1.PORCENTAJEIVA/100) * ccf.precio) AS cImpuesto1,
@@ -47,13 +48,10 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 	0 as cPorcentajeRetencion2,
 	'0' + convert(varchar,T1.IDSUCURSAL) +
 		case when T0.IDEQUIPONUEVO <> 0 or rtrim(T0.DELAL)='Arrendadora' then 'ENUE'
-			else case when T0.IDREFACCION <> 0 then 'REFA'
-				else case when T0.IDEQUIPOUSADO <> 0 then 'EUSA'
-					else case when MTIPO = 'Anticipo' then 'ANT'
-						else CASE WHEN MTIPO = 'Renta Equipo' then 'EREN' else 'OTR' end
-				end
-			end
-		  end
+			when T0.IDREFACCION <> 0 then 'REFA'
+			when T0.IDEQUIPOUSADO <> 0 then 'EUSA'
+			when MTIPO = 'Anticipo' then 'ANT'
+			WHEN MTIPO = 'Renta Equipo' then 'EREN' else 'OTR'
 		end AS cCodigoAlmacen,
 	rtrim(T0.DELAL) AS cReferencia,
 	dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
@@ -88,6 +86,7 @@ FROM Score.ConFac AS T0
 	LEFT JOIN Score.EquipoRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
 	LEFT JOIN Score.EquipoUsado AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
 	LEFT JOIN Score.OTRefaccion AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
+	LEFT JOIN Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 )
 -- Movimientos/Conceptos de Factura
 SELECT * FROM ConFacPorTimbrar
@@ -135,7 +134,8 @@ FROM Score.ConNot T0
 	LEFT OUTER JOIN Score.OTRefaccion AS S6 ON T2.OTRLLAVEAUTONUMERICA = S6.IDOTREFACCIONES
 WHERE T0.CANTIDAD > 0
   and T0.Tipo <> 'Descuento'
-UNION ALL SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
+UNION ALL 
+SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	case when T0.IDREFACCION + T0.IDMODELO = 0 then '6111100002' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
 	T0.CANTIDADRECIBIDA AS cUnidades,
 	T0.PRECIOUNITARIO AS cPrecio,
@@ -206,7 +206,8 @@ from Score.OTRefaccion T0
 	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 	inner join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 where T0.CANTIDAD - T0.CANTIDADDEVUELTA <> 0
-union SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
+union all
+SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 --	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVOORIGEN)) + CONVERT(varchar, T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,
 	A1.CSCALMAC2 AS cCodigoProducto,
 	T1.CANTIDADRECIBIDA AS cUnidades,
@@ -239,7 +240,8 @@ FROM Score.Requisicion T0
 	LEFT JOIN Score.KardexAlta AS S3 ON T1.IDCONREQ = S3.IDCONREQ AND T1.IDREQUISICION = S3.DOCUMENTONUMERO
 	LEFT JOIN Score.Linea S4 ON S4.IDLINEA = ISNULL(S0.IDLINEA, 0) + ISNULL(S1.IDLINEA, 0) + ISNULL(S2.IDLINEA, 0)
 	LEFT JOIN Score.LineaSucursal S5 ON S4.IDLINEA = S5.IDLINEA AND T0.IDSUCURSALORIGEN = S5.IDSUCURSAL
-UNION SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
+UNION all
+SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	A1.CSCALMAC2 AS cCodigoProducto,
 	1 AS cUnidades,
 	ISNULL(T0.COSTONACIONAL, 0) AS cPrecio,
@@ -261,16 +263,12 @@ FROM Score.EquipoRenta T0
 	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'ENUE'
 	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'EREN'
 WHERE T0.PROPIETARIO = 'Hemoeco'
-)
-SELECT um.* FROM UnionMovimientos AS um
- JOIN Documentos AS d ON d.cIdDocumento = um.cIdDocumento
 GO
 
 -- -- Tests
---  Select top 10 * from Movimientos_test
---  Select top 10 * from Movimientos_test where cIdDocumento like 'FAC%'
--- Test results
---SELECT * FROM Movimientos
+-- SELECT * FROM Movimientos
+-- Select top 10 * from Movimientos
+-- Select top 10 * from Movimientos where cIdDocumento like 'FAC%'
 
 --Grant Execute, view definition on dbo.Fecha to public;
 
@@ -279,12 +277,12 @@ GO
 -- Select DescCorregida, DescrAdaptada, IIF(DescCorregida <> DescrAdaptada, 'Error', 'Exito') as compara
 --   , MTIPO, DESCRIPCION, codigoProducto, cNombreProducto, IDCONFAC
 --   FROM UnionMovimientos
--- Select * from Movimientos_test where compara <> 'exito' -- order by IDCONFAC desc 
+-- Select * from Movimientos where compara <> 'exito' -- order by IDCONFAC desc 
 ---------------------------------------------
 
--- Test with function integrated
--- SELECT top 1000 * FROM Movimientos
+-- -- Test with function integrated
+-- SELECT top 100 * FROM Movimientos
 --    where cReferencia = 'Renta'
 --    order by cIdDocumento desc
--- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
+-- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
 -- where cIdDocumento in ('FAC466140','FAC466141','FAC460101','FAC451204','FAC449199','FAC445635','FAC424797','FAC428267','FAC428268','FAC428489','FAC428490','FAC402271','FAC404898','FAC409615','FAC412969','FAC414075')

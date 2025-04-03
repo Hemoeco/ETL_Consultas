@@ -57,4 +57,4 @@ where T5.cidproducto is null
 GO
 
 -- Test
-Select top 10 * from Productos
+-- Select top 10 * from Productos

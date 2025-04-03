@@ -44,7 +44,7 @@ BEGIN
 END
 GO
 
-Grant Execute, view definition on fn_AdaptarDescripcionObservacion to public;
+Grant Execute, view definition on dbo.fn_AdaptarDescripcionObservacion to public;
 
 -- Tests :
 -- -- Para probar, descomentar y correr

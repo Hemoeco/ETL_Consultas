@@ -6,6 +6,7 @@
 ------------------------------------------------------- */
 
 use ETL_Pruebas
+GO
 
 -- Drop View If Exists [Score].[Cliente]
 -- GO
@@ -156,6 +157,8 @@ As
         --  AND ISNULL(T4.FORMADEPAGO,'')<>''
         AND FECHA >= 81819 -- 01/01/2025 --> AND YEAR(dbo.fecha(T0.FECHA)) >= 2022
         --  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
+    -- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
+    -- Where IDFACTURA in (466140,466141,460101,451204,449199,445635,424797,428267,428268,428489,428490,402271,404898,409615,412969,414075)
 GO
 
 Create or alter view [Score].[KardexAlta]
