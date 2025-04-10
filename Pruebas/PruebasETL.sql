@@ -3,8 +3,9 @@
 -- Consultas de prueba para identificar datos en Etl y Comercial
 -- --------------------------------------------------------------
 
-
+-- ETL realiza las sigiuentes consultas
 Select * from Documentos
+Select * from Movimientos
 
 -- Identificar prod/serv en comercial para obtener clave prod/serv y unidad 
 SELECT TOP (10) [CIDPRODUCTO]
@@ -56,3 +57,18 @@ Select p.CCODIGOPRODUCTO, p.CNOMBREPRODUCTO, p.CCLAVESAT, u.CNOMBREUNIDAD, u.CCL
     from admProductos as p
         join admUnidadesMedidaPeso as u on p.CIDUNIDADBASE = u.CIDUNIDAD
     where p.CCODIGOPRODUCTO in ('REN', 'SRV')
+
+-- Identificar nombre del producto std utilizado para Score
+Select CCODIGOPRODUCTO, CNOMBREPRODUCTO 
+	from Comercial.Producto
+	where CCODIGOPRODUCTO in ('ANT','REN','SRV','MANIOBRA','RENTA.','RENMES')
+
+-- probar descripción de Score
+Select * 
+	from Movimientos
+	where cIdDocumento like 'FAC%'
+
+-- Relacion producto - clave unidad SAT
+Select top 3 * from Productos
+
+Select * from serverContabilidad.adHemoeco_prueba.dbo.admUnidadesMedidaPeso

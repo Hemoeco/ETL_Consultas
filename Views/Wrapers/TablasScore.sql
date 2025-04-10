@@ -5,7 +5,7 @@
 -- desde Score
 ------------------------------------------------------- */
 
-use ETL_Pruebas
+use ETL_Pruebas_Cesar
 GO
 
 -- Drop View If Exists [Score].[Cliente]
@@ -159,6 +159,14 @@ As
         --  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
     -- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
     -- Where IDFACTURA in (466140,466141,460101,451204,449199,445635,424797,428267,428268,428489,428490,402271,404898,409615,412969,414075)
+GO
+
+-- dependiente de FacturaPorTimbrar
+Create or alter view [Score].[ConFacPorTimbrar]
+As
+    SELECT con.*
+    FROM serverScore.IT_Rentas_pruebas.dbo.OperConFac as con
+		join Score.FacturaPorTimbrar as f on f.IDFACTURA = con.FACTURASNUMERO
 GO
 
 Create or alter view [Score].[KardexAlta]

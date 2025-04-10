@@ -22,22 +22,19 @@ with CantidadConFac as (
 				when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
 				else con.PRECIOUNITARIO
 			end AS precio,
-			CASE
-				-- Conversiones especiales
-				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversión especial para 'MANIOBRA'
-				when f.XML_ETIQUETA2 <> 'MANIOBRA' AND f.XML_ETIQUETA2 is not null and f.XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then f.XML_ETIQUETA2 -- Conversion Score
-				--
-
-				WHEN con.IDEQUIPONUEVO + con.IDEQUIPOUSADO <> 0 or rtrim(con.DELAL)='Arrendadora' THEN 'MOD' + convert(varchar,con.IDLINEA)
-				WHEN con.IDREFACCION <> 0 THEN 'REF' + convert(varchar,con.IDREFACCION)
-				WHEN MTIPO = 'Anticipo' then 'ANT'
-				WHEN MTIPO = 'Renta Equipo' then 'REN'
-				ELSE 'SRV'
-			END AS codigoProducto
+			dbo.fn_ObtenerCodigoProducto(
+				con.MTIPO,
+				con.IDEQUIPONUEVO,
+				con.IDEQUIPOUSADO,
+				con.DELAL,
+				con.IDLINEA,
+				con.IDREFACCION,
+				f.XML_ETIQUETA2
+			) AS codigoProducto
 		FROM Score.ConFac as con
 			join Score.FacturaPorTimbrar as f on f.IDFACTURA = con.FACTURASNUMERO
-),
-ConFacPorTimbrar as (
+), -- test select * from CantidadConFac,
+MovConFac as (
 SELECT Concat('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
 	ccf.codigoProducto as cCodigoProducto,
 	ccf.unidadesCapturadas AS cUnidadesCapturadas,
@@ -79,7 +76,7 @@ SELECT Concat('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
 		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
 	else 0 end AS cImporteExtra2,
 	'' as cSCMovto
-FROM Score.ConFac AS T0
+FROM Score.ConFacPorTimbrar AS T0
 	join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
 	INNER JOIN Score.FacturaPorTimbrar AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
 	LEFT JOIN Score.EquipoNuevo T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
@@ -89,7 +86,7 @@ FROM Score.ConFac AS T0
 	LEFT JOIN Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 )
 -- Movimientos/Conceptos de Factura
-SELECT * FROM ConFacPorTimbrar
+SELECT * FROM MovConFac
 UNION ALL
 SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)

@@ -20,3 +20,4 @@ grant select, view definition on dbo.test_ConFac to PUBLIC
 -- 385, 349
 -- Server 'serverScore' is not configured for RPC.
 EXECUTE ('Select top 100 * from test_ConFac') AT [serverScore]
+Select top 100 * from serverScore.IT_Rentas_pruebas.dbo.test_ConFac
