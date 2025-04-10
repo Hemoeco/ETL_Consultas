@@ -1,4 +1,4 @@
-CREATE VIEW [dbo].[Movimientos] AS
+CREATE OR ALTER VIEW [dbo].[Movimientos] AS
 with CantidadConFac as (
         -- Convertir cCodigoProducto. Conversion Score
         Select IDCONFAC,
@@ -14,19 +14,24 @@ with CantidadConFac as (
             case
                 when MTIPO = 'Renta equipo' and XML_ETIQUETA2 = 'RENMES.' then (con.DIAS * con.PRECIOUNITARIO)
                 else con.PRECIOUNITARIO
-            end AS precio
+            end AS precio,
+			CASE
+				-- Conversiones especiales
+				WHEN f.XML_ETIQUETA2 = 'MANIOBRA' AND MTIPO = 'servicio a obra' THEN f.XML_ETIQUETA2 -- Conversión especial para 'MANIOBRA'
+				when f.XML_ETIQUETA2 <> 'MANIOBRA' AND f.XML_ETIQUETA2 is not null and f.XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then f.XML_ETIQUETA2 -- Conversion Score
+				--
+
+				WHEN con.IDEQUIPONUEVO + con.IDEQUIPOUSADO <> 0 or rtrim(con.DELAL)='Arrendadora' THEN 'MOD' + convert(varchar,con.IDLINEA)
+				WHEN con.IDREFACCION <> 0 THEN 'REF' + convert(varchar,con.IDREFACCION)
+				WHEN MTIPO = 'Anticipo' then 'ANT'
+				WHEN MTIPO = 'Renta Equipo' then 'REN'
+				ELSE 'SRV'
+			END AS codigoProducto
             from [192.168.111.14].IT_Rentas.dbo.OperConFac as con
                 join [192.168.111.14].IT_Rentas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
 )
-SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
-	CASE 
-            when XML_ETIQUETA2 is not null and XML_ETIQUETA2 <> ''  and MTIPO = 'Renta equipo' then XML_ETIQUETA2 -- Conversion Score
-            WHEN T0.IDEQUIPONUEVO + T0.IDEQUIPOUSADO <> 0 or rtrim(T0.DELAL)='Arrendadora' THEN 'MOD' + convert(varchar,T0.IDLINEA)
-            WHEN T0.IDREFACCION <> 0 THEN 'REF' + convert(varchar,T0.IDREFACCION)
-            WHEN MTIPO = 'Anticipo' then 'ANT'
-            WHEN MTIPO = 'Renta Equipo' then 'REN'
-            ELSE 'SRV'
-        END AS cCodigoProducto,
+SELECT CONCAT('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
+	ccf.codigoProducto AS cCodigoProducto,
 	ccf.unidadesCapturadas AS cUnidadesCapturadas,
 	ccf.precio AS cPrecioCapturado,
 	convert(decimal(15,4), ccf.unidadesCapturadas * (T1.PORCENTAJEIVA/100) * ccf.precio) AS cImpuesto1,
@@ -44,7 +49,8 @@ SELECT 'FAC' + convert(varchar,T0.FACTURASNUMERO) AS cIdDocumento,
 		  end
 		end AS cCodigoAlmacen,
 	rtrim(T0.DELAL) AS cReferencia, 
-    rtrim(T0.DESCRIPCION) + CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
+    dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
+	+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
     + ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
 --	rtrim(T0.DESCRIPCION) AS cObservaMov,
 	--CASE WHEN T0.DIAS <> 0 THEN rtrim(T0.DELAL) ELSE '' END AS cTextoEx01,
@@ -75,6 +81,7 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperConFac AS T0
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposUsados AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES
+	LEFT JOIN adhemoeco_prueba.dbo.admProductos AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)
 		ELSE CASE WHEN T2.IDREFACCION <> 0 THEN 'REF' + convert(varchar, T2.IDREFACCION)
