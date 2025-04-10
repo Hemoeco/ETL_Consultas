@@ -1,7 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 CREATE VIEW [dbo].[Movimientos] AS
 with CantidadConFac as (
         -- Convertir cCodigoProducto. Conversion Score
