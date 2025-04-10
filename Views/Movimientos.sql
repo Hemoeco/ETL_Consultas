@@ -148,7 +148,7 @@ from [192.168.111.14].IT_Rentas.dbo.OperConRM T0
 	inner join [192.168.111.14].IT_Rentas.dbo.OperRecepcionMercancia T1 on T0.IDRECEPCIONMERCANCIA = T1.IDRECEPCIONMERCANCIA
 	left join [192.168.111.14].IT_Rentas.dbo.CataRefacciones T2 on T0.IDREFACCION = T2.IDREFACCION
 	left join [192.168.111.14].IT_Rentas.dbo.CataModelos T3 on T0.IDMODELO = T3.IDMODELO
-where year(dbo.fecha(T1.FECHARECEPCION)) >= 2022
+where T1.FECHARECEPCION >= 80723 -- 80723 = 01/01/2022 -- year(dbo.fecha(T1.FECHARECEPCION)) >= 2022
 /*UNION ALL
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	case when T0.IDREFACCION + T0.IDMODELO = 0 then 'SRV' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
