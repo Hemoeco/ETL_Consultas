@@ -58,7 +58,7 @@ WHERE T0.TOTAL <> 0
   AND T0.FECHA >= 80723 -- 80723 = 01/01/2022 -- YEAR(dbo.fecha(T0.FECHA)) >= 2022
 --  AND (datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) = 0 AND T0.PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
 -- Notas de credito
-UNION SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
+UNION ALL SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFechaVencimiento, 
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFechaEntregaRecepcion,
@@ -114,7 +114,7 @@ WHERE T0.TOTAL <> 0
   AND T5.CIDDOCUMENTO IS NULL
   AND T0.CERRADO = 'S'
 --  and dbo.fecha(T0.FECHA) >='20220901'
-UNION
+UNION ALL
 -- Compras y recepciones
 /*
 SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
@@ -212,7 +212,7 @@ WHERE FECHARECEPCION >= 81758 -- 81758 = 01/11/2024 year(dbo.fecha(FECHARECEPCIO
   and T0.IDRECEPCIONMERCANCIA not in (40384, 40639)
   and T0.Tipo NOT IN ('Consignación')
   AND T1.cFolio IS NULL
-/*UNION
+/*UNION ALL
 -- Devoluciones a proveedores
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHA), 101) AS cFecha,
@@ -256,7 +256,7 @@ WHERE year(dbo.fecha(FECHA)) >= 2019
   and dbo.fecha(T0.FECHA) >='20191001'
   and T0.IDDEVOLUCION > '477'
 */
-UNION
+UNION ALL
 -- Ordenes de trabajo
 
 SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
@@ -299,7 +299,7 @@ WHERE T0.FECHATERMINADO >= 80723 -- 80723 = 01/01/2022 -- dbo.fecha(T0.FECHATERM
   AND T0.FACTURASNUMERO = 0
   and (select sum(CANTIDAD - CANTIDADDEVUELTA) from [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = T0.NUMERO) <> 0
   AND T3.cFolio IS NULL
-UNION
+UNION ALL
 -- Transpasos y requisiciones
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS cFecha,
@@ -342,7 +342,7 @@ WHERE T4.FECHARECIBIDA >= 80723 -- 80723 = 01/01/2022 -- dbo.fecha(T4.FECHARECIB
   and T0.IDREQUISICION > '8492'
 
 -- Alta en renta
-UNION SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
+UNION ALL SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS cFecha,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS cFechaVencimiento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS cFechaEntregaRecepcion,
@@ -383,7 +383,7 @@ WHERE T0.FECHAALTAHEMOECO >= 81057 -- 81057 = 01/12/2022 -- YEAR(dbo.fecha(T0.FE
   -- included above and dbo.fecha(T0.FECHAALTAHEMOECO) >= '20221201'
   AND T0.PROPIETARIO = 'Hemoeco'
   and T4.CIDDOCUMENTO is null
-UNION
+UNION ALL
 -- Pagos (Depositos)
 SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS cFecha,
