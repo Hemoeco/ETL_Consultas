@@ -1,8 +1,11 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE VIEW [dbo].[Documentos] AS
+/* ----------------------------------------------------
+-- Hemoeco Renta (2025)
+-- Script: Documentos.sql
+-- Vista para la consulta de documentos
+-- lee los documentos de Score para importarlso a Comercial
+ ---------------------------------------------------- */
+
+ALTER VIEW [dbo].[Documentos] AS
 -- Facturas
 SELECT 'FAC' + CONVERT(varchar, IDFACTURA) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
@@ -52,10 +55,10 @@ WHERE T0.TOTAL <> 0
   AND T0.FOLIO2 = ''
   AND T0.PROCESADA = 'N'
 --  AND ISNULL(T4.FORMADEPAGO,'')<>''
-  AND YEAR(dbo.fecha(T0.FECHA)) >= 2022
+  AND T0.FECHA >= 80723 -- 80723 = 01/01/2022 -- YEAR(dbo.fecha(T0.FECHA)) >= 2022
 --  AND (datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) = 0 AND T0.PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
 -- Notas de credito
-UNION SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
+UNION ALL SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFechaVencimiento, 
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFechaEntregaRecepcion,
@@ -104,14 +107,14 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperNotasCredito T0
 	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos T5 ON T5.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDNOTASCREDITO) AND T5.CIDCONCEPTODOCUMENTO = T4.CIDCONCEPTODOCUMENTO AND T5.cCancelado = 0
 	LEFT JOIN ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHA)
 WHERE T0.TOTAL <> 0
-  AND YEAR(dbo.fecha(T0.FECHA)) >= 2024
-  and dbo.fecha(T0.FECHA) >= '20240131'
+  AND T0.FECHA >= 81483 -- 81483 = 31/01/2024 -- YEAR(dbo.fecha(T0.FECHA)) >= 2024
+  -- included above and dbo.fecha(T0.FECHA) >= '20240131'
 --  AND datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) <= 3
   AND T0.IDNOTASCREDITO not in ('32977')
   AND T5.CIDDOCUMENTO IS NULL
   AND T0.CERRADO = 'S'
 --  and dbo.fecha(T0.FECHA) >='20220901'
-UNION
+UNION ALL
 -- Compras y recepciones
 /*
 SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
@@ -201,15 +204,15 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperRecepcionMercancia T0
 	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos T1 ON T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA
 	LEFT JOIN ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHADOCUMENTO)
 	LEFT JOIN [document_273d0425-9e06-4275-a043-21fe8d6f23e4_metadata].dbo.Comprobante T10 on left(T10.TipoComprobante,1)='I' and rtrim(T10.RFCEmisor) = rtrim(T2.RFC) and T10.Serie + T10.Folio = T0.NUMERODOCUMENTO
-WHERE year(dbo.fecha(FECHARECEPCION)) >= 2024
+WHERE FECHARECEPCION >= 81758 -- 81758 = 01/11/2024 year(dbo.fecha(FECHARECEPCION)) >= 2024
   AND T0.Cerrada = 1
   AND T0.Estado = 'Contabilizada'
-  and dbo.fecha(T0.FECHARECEPCION) >='20241101'
+  -- included above and dbo.fecha(T0.FECHARECEPCION) >='20241101'
   and T0.IDRECEPCIONMERCANCIA > 36081
   and T0.IDRECEPCIONMERCANCIA not in (40384, 40639)
   and T0.Tipo NOT IN ('Consignación')
   AND T1.cFolio IS NULL
-/*UNION
+/*UNION ALL
 -- Devoluciones a proveedores
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHA), 101) AS cFecha,
@@ -253,7 +256,7 @@ WHERE year(dbo.fecha(FECHA)) >= 2019
   and dbo.fecha(T0.FECHA) >='20191001'
   and T0.IDDEVOLUCION > '477'
 */
-UNION
+UNION ALL
 -- Ordenes de trabajo
 
 SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
@@ -291,12 +294,12 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperOrdenesTrabajo T0
 	INNER JOIN [192.168.111.14].IT_Rentas.dbo.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 	inner join adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admConceptos T2 on T2.CCODIGOCONCEPTO = 'ODT' + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO)
 	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos T3 ON T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO AND T3.cFolio = T0.NUMERO -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
-WHERE dbo.fecha(T0.FECHATERMINADO) >= '20220101'
-  AND dbo.fecha(T0.FECHATERMINADO) <= getdate() 
+WHERE T0.FECHATERMINADO >= 80723 -- 80723 = 01/01/2022 -- dbo.fecha(T0.FECHATERMINADO) >= '20220101'
+  AND T0.FECHATERMINADO <= dbo.fn_FechaIT(getdate())  -- dbo.fecha(T0.FECHATERMINADO) <= getdate()
   AND T0.FACTURASNUMERO = 0
   and (select sum(CANTIDAD - CANTIDADDEVUELTA) from [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = T0.NUMERO) <> 0
   AND T3.cFolio IS NULL
-UNION
+UNION ALL
 -- Transpasos y requisiciones
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS cFecha,
@@ -334,12 +337,12 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperRequisiciones T0
 	inner join (select IDREQUISICION, FECHARECIBIDA from [192.168.111.14].IT_Rentas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
 	inner join adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admConceptos T2 on T2.CCODIGOCONCEPTO = 'REQ' + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVOORIGEN)) + CONVERT(varchar, T0.IDCENTROOPERATIVOORIGEN)
 	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos T3 ON T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) AND T3.cFolio = T0.IDREQUISICION
-WHERE dbo.fecha(T4.FECHARECIBIDA) >= '20220101' 
+WHERE T4.FECHARECIBIDA >= 80723 -- 80723 = 01/01/2022 -- dbo.fecha(T4.FECHARECIBIDA) >= '20220101' 
   AND T3.cFolio IS NULL
   and T0.IDREQUISICION > '8492'
 
 -- Alta en renta
-UNION SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
+UNION ALL SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS cFecha,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS cFechaVencimiento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS cFechaEntregaRecepcion,
@@ -376,11 +379,11 @@ FROM [192.168.111.14].IT_Rentas.dbo.CataEquiposRenta T0
 	INNER JOIN [192.168.111.14].IT_Rentas.dbo.ParaCentOper T5 ON T0.IDCENTROOPERATIVO = T5.IDCENTROOPERATIVO
 	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admConceptos T3 on T3.CIDDOCUMENTODE=2 and T3.CCODIGOCONCEPTO = 'PE' + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO)
 	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos T4 ON T4.CIDDOCUMENTODE=2 AND T4.CSERIEDOCUMENTO='REN' AND T4.CFOLIO = T0.IDEQUIPO
-WHERE YEAR(dbo.fecha(T0.FECHAALTAHEMOECO)) >= 2022
-  and dbo.fecha(T0.FECHAALTAHEMOECO) >= '20221201'
+WHERE T0.FECHAALTAHEMOECO >= 81057 -- 81057 = 01/12/2022 -- YEAR(dbo.fecha(T0.FECHAALTAHEMOECO)) >= 2022
+  -- included above and dbo.fecha(T0.FECHAALTAHEMOECO) >= '20221201'
   AND T0.PROPIETARIO = 'Hemoeco'
   and T4.CIDDOCUMENTO is null
-UNION
+UNION ALL
 -- Pagos (Depositos)
 SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS cFecha,
@@ -426,7 +429,7 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperDepositos OD
 				group by OP.DEPOSITOSNUMERO) TX on TX.DEPOSITOSNUMERO = OD.IDDEPOSITO
 	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admParametros M0 on M0.CIDEMPRESA>0
 	left join adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos M8 on M8.CIDDOCUMENTODE=9 and M8.CSERIEDOCUMENTO='P' + rtrim(PCO.INICIALES) and M8.cfolio = OD.IDDEPOSITO
-where dbo.fecha(OD.FECHA) >='20220101'
+where OD.FECHA >= 80723 -- 80723 = 01/01/2022 -- dbo.fecha(OD.FECHA) >='20220101'
  and OD.TIMBRAR='S'
  and M8.CIDDOCUMENTO is null
  --AND OD.IDDEPOSITO=386326
