@@ -35,6 +35,7 @@ CantidadConFac as (
 			END AS codigoProducto
             from [192.168.111.14].IT_Rentas.dbo.OperConFac as con
                 join [192.168.111.14].IT_Rentas.dbo.OperFacturas as f on f.IDFACTURA = con.FACTURASNUMERO
+				join FechaIncluirAPartirDe as fc on f.FECHA >= fc.Fecha -- Apply same filter as in Documentos
 ),
 TodosLosMovimientos as (
 SELECT CONCAT('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
@@ -89,6 +90,7 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperConFac AS T0
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposUsados AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES
 	LEFT JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admProductos AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+	join FechaIncluirAPartirDe as fc on T1.FECHA >= fc.Fecha -- Apply same filter as in Documentos
 UNION ALL SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)
 		ELSE CASE WHEN T2.IDREFACCION <> 0 THEN 'REF' + convert(varchar, T2.IDREFACCION)
@@ -130,6 +132,7 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperConNot T0
 	LEFT OUTER JOIN [192.168.111.14].IT_Rentas.dbo.CataEquiposUsados AS S4 ON T2.IDEQUIPOUSADO = S4.IDEQUIPO AND T2.DELAL = 'Venta'
 	LEFT OUTER JOIN [192.168.111.14].IT_Rentas.dbo.CataLineasSucursal AS S5 ON T2.IDLINEA = S5.IDLINEA AND T2.IDSUCURSAL = S5.IDSUCURSAL
 	LEFT OUTER JOIN [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones AS S6 ON T2.OTRLLAVEAUTONUMERICA = S6.IDOTREFACCIONES
+	join FechaIncluirAPartirDe as fc on T1.FECHA >= fc.Fecha
 WHERE T0.CANTIDAD > 0
   and T0.Tipo <> 'Descuento'
 UNION ALL SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
@@ -203,6 +206,9 @@ SELECT 'ODT' + rtrim(T0.ORDENESTRABAJONUMERO) AS cIdDocumento,
 from [192.168.111.14].IT_Rentas.dbo.OperOTRefacciones T0
 	INNER JOIN [192.168.111.14].IT_Rentas.dbo.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 	inner join [192.168.111.14].IT_Rentas.dbo.CataRefacciones T2 on T0.IDREFACCION = T2.IDREFACCION
+	-- todo: Right filter?
+	-- join [192.168.111.14].IT_Rentas.dbo.OperOrdenesTrabajo as OT on OT.NUMERO = T0.ORDENESTRABAJONUMERO
+	-- join FechaIncluirAPartirDe as fc on OT.FECHATERMINADO between fc.Fecha and dbo.fn_FechaIT(getdate())
 where T0.CANTIDAD - T0.CANTIDADDEVUELTA <> 0
 union all SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 --	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVOORIGEN)) + CONVERT(varchar, T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,
@@ -237,6 +243,8 @@ FROM [192.168.111.14].IT_Rentas.dbo.OperRequisiciones T0
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.OperKardexAltas AS S3 ON T1.IDCONREQ = S3.IDCONREQ AND T1.IDREQUISICION = S3.DOCUMENTONUMERO
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataLineas S4 ON S4.IDLINEA = ISNULL(S0.IDLINEA, 0) + ISNULL(S1.IDLINEA, 0) + ISNULL(S2.IDLINEA, 0)
 	LEFT JOIN [192.168.111.14].IT_Rentas.dbo.CataLineasSucursal S5 ON S4.IDLINEA = S5.IDLINEA AND T0.IDSUCURSALORIGEN = S5.IDSUCURSAL
+	-- todo: Filter results? in Documentos, this is a subquery
+	-- join FechaIncluirAPartirDe as fc on T1.FECHARECIBIDA >= fc.Fecha
 UNION ALL SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	A1.CSCALMAC2 AS cCodigoProducto,
 	1 AS cUnidades,
@@ -258,6 +266,7 @@ UNION ALL SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 FROM [192.168.111.14].IT_Rentas.dbo.CataEquiposRenta T0
 	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admAlmacenes A1 ON A1.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'ENUE'
 	INNER JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admAlmacenes A2 ON A2.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'EREN'
+	join FechaIncluirAPartirDe as fc on T0.FECHAALTAHEMOECO >= fc.Fecha
 WHERE T0.PROPIETARIO = 'Hemoeco'
 )
 -- Filtrar sólo los movimientos de los documentos que se importarán, para limitar el número de resultados solo a los registros requeridos.
@@ -266,4 +275,4 @@ Select m.* from TodosLosMovimientos as m
 GO
 
 -- Test
--- Select * from Movimientos_Cesar_borrar
+-- Select * from Movimientos
