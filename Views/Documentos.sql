@@ -54,7 +54,7 @@ FROM Score.FacturaPorTimbrar T0
 -- Facturas
 SELECT * FROM DocFactura
 
-UNION ALL
+UNION
 
 -- Notas de credito
 SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
@@ -107,7 +107,7 @@ FROM Score.NotaDeCreditoPorTimbrar T0
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHA)
 WHERE T5.CIDDOCUMENTO IS NULL
 
-UNION ALL
+UNION
 
 -- Compras y recepciones
 /*
@@ -207,7 +207,7 @@ WHERE FECHARECEPCION >= 81758 -- 81758 = '01/11/2024 -- year(dbo.fecha(FECHARECE
   and T0.Tipo NOT IN ('Consignación')
   AND T1.cFolio IS NULL
 
-/*UNION ALL
+/*UNION
 -- Devoluciones a proveedores
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHA), 101) AS cFecha,
@@ -252,7 +252,7 @@ WHERE year(dbo.fecha(FECHA)) >= 2019
   and T0.IDDEVOLUCION > '477'
 */
 
-UNION ALL
+UNION
 
 -- Ordenes de trabajo
 SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
@@ -296,7 +296,7 @@ WHERE T0.FECHATERMINADO >= 80723 -- 80723 = 01/01/2022 -- dbo.fecha(T0.FECHATERM
   and (select sum(CANTIDAD - CANTIDADDEVUELTA) from Score.OTRefaccion where ORDENESTRABAJONUMERO = T0.NUMERO) <> 0
   AND T3.cFolio IS NULL
 
-UNION ALL
+UNION
 
 -- Transpasos y requisiciones
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
@@ -339,7 +339,7 @@ WHERE T4.FECHARECIBIDA >= 80723 -- 80723 = 01/01/2022 --  dbo.fecha(T4.FECHARECI
   AND T3.cFolio IS NULL
   and T0.IDREQUISICION > '8492'
 
-UNION ALL
+UNION
 
 -- Alta en renta
 SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
@@ -384,7 +384,7 @@ WHERE T0.FECHAALTAHEMOECO >= 81057 -- 81057 = 01/12/2022 -- YEAR(dbo.fecha(T0.FE
   AND T0.PROPIETARIO = 'Hemoeco'
   and T4.CIDDOCUMENTO is null
 
-UNION ALL
+UNION
 
 -- Pagos (Depositos)
 SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,

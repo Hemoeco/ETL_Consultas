@@ -87,7 +87,7 @@ FROM Score.ConFacPorTimbrar AS T0
 )
 -- Movimientos/Conceptos de Factura
 SELECT * FROM MovConFac
-UNION ALL
+UNION
 SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
 	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)
 		ELSE CASE WHEN T2.IDREFACCION <> 0 THEN 'REF' + convert(varchar, T2.IDREFACCION)
@@ -131,7 +131,7 @@ FROM Score.ConNot T0
 	LEFT OUTER JOIN Score.OTRefaccion AS S6 ON T2.OTRLLAVEAUTONUMERICA = S6.IDOTREFACCIONES
 WHERE T0.CANTIDAD > 0
   and T0.Tipo <> 'Descuento'
-UNION ALL 
+UNION
 SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	case when T0.IDREFACCION + T0.IDMODELO = 0 then '6111100002' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
 	T0.CANTIDADRECIBIDA AS cUnidades,
@@ -156,7 +156,7 @@ from Score.ConRM T0
 	left join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 	left join Score.Modelo T3 on T0.IDMODELO = T3.IDMODELO
 where year(dbo.fecha(T1.FECHARECEPCION)) >= 2022
-/*UNION ALL
+/*UNION
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
 	case when T0.IDREFACCION + T0.IDMODELO = 0 then 'SRV' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
 	T0.CANTIDAD AS cUnidades,
@@ -180,7 +180,7 @@ from Score.ConDev T0
 	left join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 	left join Score.Modelo T3 on T0.IDMODELO = T3.IDMODELO
 */
-UNION ALL
+UNION
 SELECT 'ODT' + rtrim(T0.ORDENESTRABAJONUMERO) AS cIdDocumento,
 	case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' AS cCodigoProducto, 
 	T0.CANTIDAD - T0.CANTIDADDEVUELTA AS cUnidades,
@@ -203,7 +203,7 @@ from Score.OTRefaccion T0
 	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 	inner join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 where T0.CANTIDAD - T0.CANTIDADDEVUELTA <> 0
-union all
+union
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 --	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVOORIGEN)) + CONVERT(varchar, T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,
 	A1.CSCALMAC2 AS cCodigoProducto,
@@ -237,7 +237,7 @@ FROM Score.Requisicion T0
 	LEFT JOIN Score.KardexAlta AS S3 ON T1.IDCONREQ = S3.IDCONREQ AND T1.IDREQUISICION = S3.DOCUMENTONUMERO
 	LEFT JOIN Score.Linea S4 ON S4.IDLINEA = ISNULL(S0.IDLINEA, 0) + ISNULL(S1.IDLINEA, 0) + ISNULL(S2.IDLINEA, 0)
 	LEFT JOIN Score.LineaSucursal S5 ON S4.IDLINEA = S5.IDLINEA AND T0.IDSUCURSALORIGEN = S5.IDSUCURSAL
-UNION all
+UNION
 SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	A1.CSCALMAC2 AS cCodigoProducto,
 	1 AS cUnidades,
