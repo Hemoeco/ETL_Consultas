@@ -2,7 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE Function [dbo].[Fecha](@Fecha Int) Returns dateTime
+CREATE or alter Function [dbo].[Fecha](@Fecha Int) Returns dateTime
    AS
     Begin
       Declare @FechaJul DateTime
@@ -14,3 +14,5 @@ CREATE Function [dbo].[Fecha](@Fecha Int) Returns dateTime
     End 
 
 GO
+
+Grant Execute, view definition on dbo.Fecha to public;
