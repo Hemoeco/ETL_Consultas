@@ -5,7 +5,7 @@
 -- desde Score
 ------------------------------------------------------- */
 
-use ETL_Pruebas_Cesar
+-- use ETL_Pruebas_Cesar
 GO
 
 -- Drop View If Exists [Score].[Cliente]
@@ -71,6 +71,15 @@ As
     from serverScore.IT_Rentas_pruebas.dbo.OperDepositos
 GO
 
+Create or alter view [Score].[DepositoPorTimbrar]
+As
+    Select OD.*,
+        CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS FechaStr
+    from serverScore.IT_Rentas_pruebas.dbo.OperDepositos as OD
+    where OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
+        and OD.TIMBRAR='S'
+GO
+
 -- todo: DepositoPorTimbrar
 
 -- Devolucion
@@ -91,6 +100,15 @@ Create or alter view [Score].[EquipoRenta]
 As
     SELECT *
     FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta
+GO
+
+Create or alter view [Score].[EquipoRentaDadoDeAlta]
+As
+    SELECT T0.*,
+        CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS FechaAltaSucursalStr
+    FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta as T0
+    WHERE T0.PROPIETARIO = 'Hemoeco' 
+        AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
 GO
 
 Create or alter view [Score].[EquipoUsado]
@@ -155,7 +173,7 @@ As
         AND FOLIO2 = ''
         AND PROCESADA = 'N'
         --  AND ISNULL(T4.FORMADEPAGO,'')<>''
-        AND FECHA >= 81819 -- 01/01/2025 --> AND YEAR(dbo.fecha(T0.FECHA)) >= 2022
+        AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
         --  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
     -- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
     -- Where IDFACTURA in (466140,466141,460101,451204,449199,445635,424797,428267,428268,428489,428490,402271,404898,409615,412969,414075)
@@ -209,13 +227,9 @@ As
     SELECT *
         FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
         WHERE TOTAL <> 0
-            -- AND YEAR(dbo.fecha(T0.FECHA)) >= 2024 -- esta condicion se incluye abajo
-            -- and dbo.fecha(T0.FECHA) >= '20240131'
-            AND FECHA >= 81483 -- 31/01/2024
-            --  AND datediff(dd, dbo.Fecha(T0.FECHA), GETDATE()) <= 3
+            AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
             AND IDNOTASCREDITO not in (32977)
             AND CERRADO = 'S'
-            --  and dbo.fecha(T0.FECHA) >='20220901'
 GO
 
 -- Obra
@@ -244,8 +258,7 @@ Create or alter view [Score].[OTPorTimbrar]
 As
     Select *
     from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
-    WHERE FECHATERMINADO >= 80723 -- '20220101'. test: print dbo.Fecha(80723)
-        AND FECHATERMINADO <= dbo.fn_FechaIT(getdate()) -- Hoy. Test: print dbo.fn_FechaIT(getdate())
+    WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
         AND FACTURASNUMERO = 0
         and (select sum(CANTIDAD - CANTIDADDEVUELTA) from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = NUMERO) <> 0
 GO
@@ -294,6 +307,16 @@ As
     from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones
 GO
 
+Create or alter view [Score].[RequisicionPorTimbrar]
+As
+    Select T0.*,
+        CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS FechaRecibidaStr
+    from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones as T0
+        inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas_pruebas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
+    where T0.IDREQUISICION > 8492
+        and T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
+GO
+
 -- todo: RequisicionPorTimbrar
 
 -- Recepción de mercancía (RM)
@@ -303,11 +326,24 @@ As
     from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
 GO
 
+Create or alter view [Score].[RMPorTimbrar]
+As
+    Select *
+    from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
+    where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
+        AND Cerrada = 1
+        AND Estado = 'Contabilizada'
+        and IDRECEPCIONMERCANCIA > 36081
+        and IDRECEPCIONMERCANCIA not in (40384, 40639)
+        and Tipo NOT IN ('Consignación')
+GO
+
 /* -- Tests
 Select top 10 * from Score.Cliente
 Select top 10 * from Score.ClienteSucursal
 Select top 10 * from Score.ConDev
 Select top 10 * from Score.ConFac
+Select top 10 * from Score.ConFacPorTimbrar
 Select top 10 * from Score.ConReq
 Select top 10 * from Score.ConRM
 Select top 10 * from Score.CuentaBanco
@@ -336,5 +372,6 @@ Select top 10 * from Score.Proveedor
 Select top 10 * from Score.Refaccion
 Select top 10 * from Score.Requisicion
 Select top 10 * from Score.RM
+Select top 10 * from Score.RMPorTimbrar
 -- todo: DepositoPorTimbrar
 */
