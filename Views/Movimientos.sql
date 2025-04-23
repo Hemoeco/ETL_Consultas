@@ -43,13 +43,7 @@ SELECT CONCAT('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
 	T1.PORCENTAJEIVA AS cPorcentajeImpuesto1,
 	0 as cPorcentajeRetencion1,
 	0 as cPorcentajeRetencion2,
-	'0' + convert(varchar,T1.IDSUCURSAL) +
-		case when T0.IDEQUIPONUEVO <> 0 or rtrim(T0.DELAL)='Arrendadora' then 'ENUE'
-			when T0.IDREFACCION <> 0 then 'REFA'
-			when T0.IDEQUIPOUSADO <> 0 then 'EUSA'
-			when MTIPO = 'Anticipo' then 'ANT'
-			WHEN MTIPO = 'Renta Equipo' then 'EREN' else 'OTR'
-		end AS cCodigoAlmacen,
+	dbo.fn_ObtenerCodigoAlmacen(T1.IDSUCURSAL, T0.IDEQUIPONUEVO, T0.IDEQUIPOUSADO, T0.IDREFACCION, MTIPO, T0.DELAL) AS cCodigoAlmacen,
 	rtrim(T0.DELAL) AS cReferencia,
 	dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
 	+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
@@ -84,30 +78,45 @@ FROM Score.ConFacPorTimbrar AS T0
 	LEFT JOIN Score.EquipoUsado AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
 	LEFT JOIN Score.OTRefaccion AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
 	LEFT JOIN Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+),
+AlmacenConReq as (
+	Select IDCONREQ,
+			case 
+				when IDREFACCION <> 0 then 'REFA' 
+				when IDEQUIPONUEVO <> 0 then 'ENUE'
+				when IDEQUIPORENTA <> 0 then 'EREN'
+				when IDEQUIPOUSADO <> 0 then 'EUSA'
+				else 'TRAN'
+			end as CodigoAlmacen
+	from Score.ConReq
 )
-
 -- Movimientos/Conceptos de Factura
 SELECT * FROM MovConFac
 UNION ALL
-SELECT 'NC' + convert(varchar,T0.IDNOTASCREDITO) AS cIdDocumento,
-	case when T0.TIPO='Anticipo' then 'ANT' else CASE WHEN T2.IDEQUIPONUEVO + T2.IDEQUIPOUSADO <> 0 THEN 'MOD' + convert(varchar, T2.IDLINEA)
-		ELSE CASE WHEN T2.IDREFACCION <> 0 THEN 'REF' + convert(varchar, T2.IDREFACCION)
-			 ELSE CASE WHEN MTIPO = 'Renta Equipo' then 'REN' ELSE 'SRV' END
-			 END
-	END END AS cCodigoProducto, 
+SELECT CONCAT('NC', T0.IDNOTASCREDITO) AS cIdDocumento,
+	case 
+		when T0.TIPO='Anticipo' then 'ANT'
+		when MTIPO='Anticipo' then 'SRV'
+		else dbo.fn_ObtenerCodigoProducto(
+				MTIPO,
+				T2.IDEQUIPONUEVO,
+				T2.IDEQUIPOUSADO,
+				T2.DELAL,
+				T2.IDLINEA,
+				T2.IDREFACCION,
+				''
+			)
+	end AS cCodigoProducto,
 	T0.CANTIDAD AS cUnidades,
 	T0.IMPORTE / T0.CANTIDAD AS cPrecio,
 	(case when T1.DESGLOSARIVA='N' then 0 else case when T1.PORCENTAJEIVA=11 then 16 else T1.PORCENTAJEIVA end /100 end) * T0.CANTIDAD * T0.IMPORTE / T0.CANTIDAD AS cImpuesto1,
 	case when T1.DESGLOSARIVA='N' then 0 else case when T1.PORCENTAJEIVA=11 then 16 else T1.PORCENTAJEIVA end end AS cPorcentajeImpuesto1,
 	0 as cPorcentajeRetencion1,
 	0 as cPorcentajeRetencion2,
-	'0' + convert(varchar,T1.IDSUCURSAL) +
-		case when T2.IDEQUIPONUEVO <> 0 then 'ENUE'
-			 when T2.IDREFACCION <> 0 then 'REFA'
-			 when T2.IDEQUIPOUSADO <> 0 then 'EUSA'
-			 WHEN MTIPO = 'Renta Equipo' then 'EREN'
-			 else 'OTR'
-		end AS cCodigoAlmacen,
+	case 
+		when MTIPO='Anticipo' then Concat(dbo.fn_StdCentOper(T1.IDSUCURSAL), 'OTR')
+		else dbo.fn_ObtenerCodigoAlmacen(T1.IDSUCURSAL, T2.IDEQUIPONUEVO, T2.IDEQUIPOUSADO, T2.IDREFACCION, MTIPO, '')
+	end AS cCodigoAlmacen,
 	--rtrim(T2.DELAL) AS cReferencia, 
 	rtrim(SUBSTRING(T2.DELAL, 1, CHARINDEX('-', T2.DELAL))+' '+ substring(T2.DELAL, CHARINDEX('-', T2.DELAL)+1, LEN(T2.DELAL))) AS cReferencia, 
 	case when T0.TIPO='Anticipo' then 'Anticipo' else rtrim(T2.DESCRIPCION) end AS cObservaMov,
@@ -130,11 +139,10 @@ FROM Score.ConNot T0
 	LEFT OUTER JOIN Score.LineaSucursal AS S5 ON T2.IDLINEA = S5.IDLINEA AND T2.IDSUCURSAL = S5.IDSUCURSAL
 	LEFT OUTER JOIN Score.OTRefaccion AS S6 ON T2.OTRLLAVEAUTONUMERICA = S6.IDOTREFACCIONES
 WHERE T0.CANTIDAD > 0
-	and T1.FECHA >= dbo.fn_FechaIncluirAPartirDe()
 	and T0.Tipo <> 'Descuento'
 UNION ALL
 SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
-	case when T0.IDREFACCION + T0.IDMODELO = 0 then '6111100002' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
+	case when T0.IDREFACCION + T0.IDMODELO = 0 then '6111100002' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
 	T0.CANTIDADRECIBIDA AS cUnidades,
 	T0.PRECIOUNITARIO AS cPrecio,
 	--T0.CANTIDADRECIBIDA * T0.PRECIOUNITARIO / (100 + T1.PORCENTAJEIVA) AS cImpuesto1,
@@ -142,7 +150,7 @@ SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	T1.PORCENTAJEIVA AS cPorcentajeImpuesto1,
 	isnull(T0.RETENCIONISR, 0) as cPorcentajeRetencion1,
 	isnull(T0.RETENCIONIVA, 0) as cPorcentajeRetencion2,
-	REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + case when T0.IDREFACCION <> 0 then 'REFA' else case when T0.IDMODELO <> 0 then 'ENUE' else 'GTOS' end end AS cCodigoAlmacen,
+	dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + case when T0.IDREFACCION <> 0 then 'REFA' else case when T0.IDMODELO <> 0 then 'ENUE' else 'GTOS' end end AS cCodigoAlmacen,
 	convert(varchar,T0.IDCONRM) AS cReferencia, 
 	isnull(rtrim(T2.DESCRIPCION) + ' ' + rtrim(T2.CODIGO),'') + isnull(rtrim(T3.NOMBRE) + ' ' + rtrim(T3.MARCA) + ' ' + rtrim(T3.DESCRIPCION),'') AS cObservaMov,
 	convert(varchar, isnull(T0.IDMODELO,0) + isnull(T0.IDREFACCION,0)) AS cTextoExtra1,
@@ -159,12 +167,12 @@ from Score.ConRM T0
 -- where T1.FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe() -- incluida en 'RMPorTimbrar'
 /*UNION ALL
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
-	case when T0.IDREFACCION + T0.IDMODELO = 0 then 'SRV' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
+	case when T0.IDREFACCION + T0.IDMODELO = 0 then 'SRV' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
 	T0.CANTIDAD AS cUnidades,
 	S0.PRECIOUNITARIO AS cPrecio,
 	convert(decimal(15,2), T0.CANTIDAD * S0.PRECIOUNITARIO * (S1.PORCENTAJEIVA/100)) AS cImpuesto1,
 	S1.PORCENTAJEIVA AS cPorcent01,
-	REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + case when T0.IDREFACCION <> 0 then 'REFA' else case when T0.IDMODELO <> 0 then 'ENUE' else 'TRAN' end end AS cCodigoAlmacen,
+	dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + case when T0.IDREFACCION <> 0 then 'REFA' else case when T0.IDMODELO <> 0 then 'ENUE' else 'TRAN' end end AS cCodigoAlmacen,
 	convert(varchar,T0.IDCONDEV) AS cReferencia, 
 	isnull(rtrim(T2.DESCRIPCION) + ' ' + rtrim(T2.CODIGO),'') + isnull(rtrim(T3.NOMBRE) + ' ' + rtrim(T3.MARCA) + ' ' + rtrim(T3.DESCRIPCION),'') AS cObservaMov,
 	convert(varchar, isnull(T0.IDMODELO,0) + isnull(T0.IDREFACCION,0)) AS cTextoEx01,
@@ -183,14 +191,14 @@ from Score.ConDev T0
 */
 UNION ALL
 SELECT 'ODT' + rtrim(T0.ORDENESTRABAJONUMERO) AS cIdDocumento,
-	case when T0.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + '001' AS cCodigoProducto, 
+	case when T0.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + '001' AS cCodigoProducto, 
 	T0.CANTIDAD - T0.CANTIDADDEVUELTA AS cUnidades,
 	T0.COSTOUNITARIO AS cPrecio,
 	0 AS cImpuesto1,
 	0 AS cPorcentajeImpuesto1,
 	0 as cPorcentajeRetencion1,
 	0 as cPorcentajeRetencion2,
-	REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + 'REFA' AS cCodigoAlmacen,
+	dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + 'REFA' AS cCodigoAlmacen,
 	convert(varchar,T0.IDOTREFACCIONES) AS cReferencia, 
 	'' AS cObservaMov,
 	'' AS cTextoEx0tra,
@@ -209,7 +217,7 @@ where T0.CANTIDAD - T0.CANTIDADDEVUELTA <> 0
 	and OT.FECHATERMINADO between dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 union all
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
---	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVOORIGEN)) + CONVERT(varchar, T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,
+--	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,
 	A1.CSCALMAC2 AS cCodigoProducto,
 	T1.CANTIDADRECIBIDA AS cUnidades,
 	ISNULL(S0.COSTONACIONAL, 0) + ISNULL(S1.COSTONACIONAL, 0) + ISNULL(S2.COSTONACIONAL, 0) + ISNULL(S3.COSTOUNITARIO, isnull(T1.COSTO, 0)) AS cPrecio,
@@ -233,8 +241,9 @@ SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	A1.CSCALMAC2 as cSCMovto
 FROM Score.RequisicionPorTimbrar T0
 	inner join Score.ConReq T1 on T0.IDREQUISICION=T1.IDREQUISICION
-	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVOORIGEN)) + CONVERT(varchar, T0.IDCENTROOPERATIVOORIGEN) + case when T1.IDREFACCION <> 0 then 'REFA' else case when T1.IDEQUIPONUEVO <> 0 then 'ENUE' else case when T1.IDEQUIPORENTA <> 0 then 'EREN' else case when T1.IDEQUIPOUSADO <> 0 then 'EUSA' else 'TRAN' end end end end
-	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = REPLICATE('0', 2 - LEN(T1.IDCENTROOPERATIVO)) + CONVERT(varchar, T1.IDCENTROOPERATIVO) + case when T1.IDREFACCION <> 0 then 'REFA' else case when T1.IDEQUIPONUEVO <> 0 then 'ENUE' else case when T1.IDEQUIPORENTA <> 0 then 'EREN' else case when T1.IDEQUIPOUSADO <> 0 then 'EUSA' else 'TRAN' end end end end
+	inner join AlmacenConReq as alm on alm.IDCONREQ = T1.IDCONREQ
+	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + alm.CodigoAlmacen
+	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + alm.CodigoAlmacen
 	LEFT JOIN Score.EquipoNuevo AS S0 ON T1.IDEQUIPONUEVO = S0.IDEQUIPO
 	LEFT JOIN Score.EquipoRenta AS S1 ON T1.IDEQUIPORENTA = S1.IDEQUIPO
 	LEFT JOIN Score.EquipoUsado AS S2 ON T1.IDEQUIPOUSADO = S2.IDEQUIPO
@@ -265,13 +274,14 @@ SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	0 AS cImporteExtra2,
 	A2.CSCALMAC2 as cSCMovto
 FROM Score.EquipoRentaDadoDeAlta T0
-	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'ENUE'
-	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = REPLICATE('0', 2 - LEN(T0.IDCENTROOPERATIVO)) + CONVERT(varchar, T0.IDCENTROOPERATIVO) + 'EREN'
+	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'ENUE'
+	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'EREN'
 GO
 
 -- -- Tests
 -- SELECT * FROM Movimientos
 -- Select top 10 * from Movimientos
+-- Select * from Movimientos order by cIdDocumento, cCodigoProducto, cReferencia
 -- Select top 10 * from Movimientos where cIdDocumento like 'FAC%'
 
 --Grant Execute, view definition on dbo.Fecha to public;
@@ -291,4 +301,3 @@ GO
 -- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
 -- where cIdDocumento in ('FAC466140','FAC466141','FAC460101','FAC451204','FAC449199','FAC445635','FAC424797','FAC428267','FAC428268','FAC428489','FAC428490','FAC402271','FAC404898','FAC409615','FAC412969','FAC414075')
 --
--- Select * from Movimientos order by cIdDocumento, cCodigoProducto, cReferencia
