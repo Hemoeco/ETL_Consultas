@@ -55,7 +55,7 @@ MovConFacStd as (
 		+ ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
 		CASE 
 			WHEN T1.XML_SUBTOTAL = 0 THEN '' -- Conversion (temp)
-			WHEN T0.DIAS <> 0 THEN rtrim(SUBSTRING(T0.DELAL, 1, CHARINDEX('-', T0.DELAL))+' '+ substring(T0.DELAL, CHARINDEX('-', T0.DELAL)+1, LEN(T0.DELAL))) 
+			WHEN T0.DIAS <> 0 THEN RTrim(Replace(T0.DELAL, '-', '- ')) -- add space '25/jul/2024-31/jul/2024' -> '25/jul/2024- 31/jul/2024'
 			ELSE '' 
 		END AS cTextoExtra1,
 		CASE 
@@ -180,7 +180,7 @@ SELECT CONCAT('NC', T0.IDNOTASCREDITO) AS cIdDocumento,
 		else dbo.fn_ObtenerCodigoAlmacen(T1.IDSUCURSAL, T2.IDEQUIPONUEVO, T2.IDEQUIPOUSADO, T2.IDREFACCION, MTIPO, '')
 	end AS cCodigoAlmacen,
 	--rtrim(T2.DELAL) AS cReferencia, 
-	rtrim(SUBSTRING(T2.DELAL, 1, CHARINDEX('-', T2.DELAL))+' '+ substring(T2.DELAL, CHARINDEX('-', T2.DELAL)+1, LEN(T2.DELAL))) AS cReferencia, 
+	RTrim(Replace(T2.DELAL, '-', '- ')) AS cReferencia, -- add space '25/jul/2024-31/jul/2024' -> '25/jul/2024- 31/jul/2024'
 	case when T0.TIPO='Anticipo' then 'Anticipo' else rtrim(T2.DESCRIPCION) end AS cObservaMov,
 	convert(varchar, T0.IDCONNOT) AS cTextoExtra1,
 	'' AS cTextoExtra2,
