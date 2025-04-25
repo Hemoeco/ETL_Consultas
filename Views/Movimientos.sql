@@ -126,14 +126,14 @@ MovConFacPers as (
 		from Score.ConFacPersPorTimbrar as pers
 			join ConFacPersCodigoProd as ccf on ccf.Id = pers.Id
 			join Score.FacturaPorTimbrar AS f ON f.IDFACTURA = pers.FacturasNumero
-			join Score.ConFac as con on con.IDCONFAC = pers.IdConFac
+			join Score.ConFacPorTimbrar as con on con.IDCONFAC = pers.IdConFac
 			left join Score.EquipoNuevo AS eqn ON eqn.IDEQUIPO = con.IDEQUIPONUEVO
 			left join Score.EquipoRenta AS eqr on eqr.IDEQUIPO = con.IDEQUIPORENTA
 			left join Score.EquipoUsado AS equ ON equ.IDEQUIPO = con.IDEQUIPOUSADO
 			left join Score.OTRefaccion AS ref ON ref.IDOTREFACCIONES = con.OTRLLAVEAUTONUMERICA
 			left join Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 		-- todo: Order by Ordinal
-),
+), -- Select * from MovConFacPers -- test
 MovConFac as (
 	 Select std.* 
 	 	from MovConFacStd as std

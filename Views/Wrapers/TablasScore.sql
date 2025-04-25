@@ -388,6 +388,7 @@ Select top 10 * from Score.ClienteSucursal
 Select top 10 * from Score.ConDev
 Select top 10 * from Score.ConFac
 Select top 10 * from Score.ConFacPorTimbrar
+Select top 10 * from Score.ConFacPersPorTimbrar
 Select top 10 * from Score.ConReq
 Select top 10 * from Score.ConRM
 Select top 10 * from Score.CuentaBanco
