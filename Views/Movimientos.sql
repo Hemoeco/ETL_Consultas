@@ -34,51 +34,113 @@ with CantidadConFac as (
 		FROM Score.ConFac as con
 			join Score.FacturaPorTimbrar as f on f.IDFACTURA = con.FACTURASNUMERO
 ), -- test select * from CantidadConFac,
-MovConFac as (
-SELECT CONCAT('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
-	ccf.codigoProducto AS cCodigoProducto,
-	ccf.unidadesCapturadas AS cUnidadesCapturadas,
-	ccf.precio AS cPrecioCapturado,
-	convert(decimal(15,4), ccf.unidadesCapturadas * (T1.PORCENTAJEIVA/100) * ccf.precio) AS cImpuesto1,
-	T1.PORCENTAJEIVA AS cPorcentajeImpuesto1,
-	0 as cPorcentajeRetencion1,
-	0 as cPorcentajeRetencion2,
-	dbo.fn_ObtenerCodigoAlmacen(T1.IDSUCURSAL, T0.IDEQUIPONUEVO, T0.IDEQUIPOUSADO, T0.IDREFACCION, MTIPO, T0.DELAL) AS cCodigoAlmacen,
-	rtrim(T0.DELAL) AS cReferencia,
-	dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
-	+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
-	+ ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
---	rtrim(T0.DESCRIPCION) AS cObservaMov,
-	--CASE WHEN T0.DIAS <> 0 THEN rtrim(T0.DELAL) ELSE '' END AS cTextoEx01,
-	CASE 
-		WHEN T1.XML_SUBTOTAL = 0 THEN ''
-		WHEN T0.DIAS <> 0 THEN rtrim(SUBSTRING(T0.DELAL, 1, CHARINDEX('-', T0.DELAL))+' '+ substring(T0.DELAL, CHARINDEX('-', T0.DELAL)+1, LEN(T0.DELAL))) 
-		ELSE '' 
+ConFacPersCodigoProd as (
+	SELECT Id, 
+			dbo.fn_ConsultarCodigoProducto(Descripcion, C_ClaveProdServ, C_ClaveUnidad) AS CodigoProducto
+		from Score.ConFacPersPorTimbrar as pers
+),
+MovConFacStd as (
+	SELECT CONCAT('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
+		ccf.codigoProducto AS cCodigoProducto,
+		ccf.unidadesCapturadas AS cUnidadesCapturadas,
+		ccf.precio AS cPrecioCapturado,
+		convert(decimal(15,4), ccf.unidadesCapturadas * (T1.PORCENTAJEIVA/100) * ccf.precio) AS cImpuesto1,
+		T1.PORCENTAJEIVA AS cPorcentajeImpuesto1,
+		0 as cPorcentajeRetencion1,
+		0 as cPorcentajeRetencion2,
+		dbo.fn_ObtenerCodigoAlmacen(T1.IDSUCURSAL, T0.IDEQUIPONUEVO, T0.IDEQUIPOUSADO, T0.IDREFACCION, MTIPO, T0.DELAL) AS cCodigoAlmacen,
+		rtrim(T0.DELAL) AS cReferencia,
+		dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
+		+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
+		+ ', Fecha Pedimento: ' + isnull(CONVERT(VARCHAR(10), dbo.fecha(isnull(T5.FECHAPEDIMENTO,T2.FECHAPEDIMENTO)), 103),'') ELSE '' END  AS cObservaMov,
+		CASE 
+			WHEN T1.XML_SUBTOTAL = 0 THEN '' -- Conversion (temp)
+			WHEN T0.DIAS <> 0 THEN rtrim(SUBSTRING(T0.DELAL, 1, CHARINDEX('-', T0.DELAL))+' '+ substring(T0.DELAL, CHARINDEX('-', T0.DELAL)+1, LEN(T0.DELAL))) 
+			ELSE '' 
 		END AS cTextoExtra1,
-	CASE 
-			WHEN (T1.XML_TOTAL = 1 or T1.XML_TOTAL is null) and T4.IDEQUIPO is not null then 'Num. Int.: ' + rtrim(T4.NUMEROINTERNO) 
+		CASE 
+			WHEN (T1.XML_TOTAL = 1 or T1.XML_TOTAL is null) and T4.IDEQUIPO is not null then 'Num. Int.: ' + rtrim(T4.NUMEROINTERNO) -- Conversion (temp)
 			else '' 
 		end AS cTextoExtra2,
-	convert(varchar, T0.IDCONFAC) AS cTextoExtra3,--Se agrega campo de IDCONFAC para hacer los conceptos unicos, ya que el with con union estaba identificando campos como duplicados
-	case T0.DELAL 
-		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
-	else 0 end AS cCostoEspecifico,
-	ISNULL(T5.DEPRECIACIONCONTABLEANTERIOR, 0) as cImporteExtra1,
-	case T0.DELAL
-		when 'Venta' then ISNULL(T4.COSTONACIONAL, 0) + ISNULL(T5.COSTONACIONAL, 0) + ISNULL(T2.COSTONACIONAL, 0)
-		when 'Refacción' then T0.CANTIDAD * ISNULL(T3.COSTOUNITARIO, 0)
-	else 0 end AS cImporteExtra2,
-	'' as cSCMovto
-FROM Score.ConFacPorTimbrar AS T0
-	join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
-	INNER JOIN Score.FacturaPorTimbrar AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
-	LEFT JOIN Score.EquipoNuevo T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
-	LEFT JOIN Score.EquipoRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
-	LEFT JOIN Score.EquipoUsado AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
-	LEFT JOIN Score.OTRefaccion AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
-	LEFT JOIN Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+		convert(varchar, T0.IDCONFAC) AS cTextoExtra3,--Se agrega campo de IDCONFAC para hacer los conceptos unicos, ya que el with con union estaba identificando campos como duplicados
+		dbo.fn_CalcularCostoEspecifico(
+			T0.DELAL,
+			T0.CANTIDAD,
+			T3.COSTOUNITARIO,
+			T2.COSTONACIONAL,
+			T4.COSTONACIONAL,
+			T5.COSTONACIONAL
+		) AS cCostoEspecifico,
+		ISNULL(T5.DEPRECIACIONCONTABLEANTERIOR, 0) as cImporteExtra1,
+		dbo.fn_CalcularImporteExtra(
+			T0.DELAL,           -- Tipo de operación
+			T0.CANTIDAD,        -- Cantidad
+			T3.COSTOUNITARIO,   -- Costo unitario refacción
+			T2.COSTONACIONAL,   -- Costo nacional nuevo
+			T4.COSTONACIONAL,   -- Costo nacional renta
+			T5.COSTONACIONAL    -- Costo nacional usado
+		) AS cImporteExtra2,
+		'' as cSCMovto
+	FROM Score.ConFacPorTimbrar AS T0
+		join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
+		INNER JOIN Score.FacturaPorTimbrar AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
+		LEFT JOIN Score.EquipoNuevo T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
+		LEFT JOIN Score.EquipoRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
+		LEFT JOIN Score.EquipoUsado AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
+		LEFT JOIN Score.OTRefaccion AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
+		LEFT JOIN Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 ),
+MovConFacPers as (
+	SELECT CONCAT('FAC', pers.FacturasNumero) AS cIdDocumento,
+			ccf.CodigoProducto AS cCodigoProducto,
+			pers.Cantidad AS cUnidadesCapturadas,
+			pers.ValorUnitario AS cPrecioCapturado,
+			pers.MontoIVA AS cImpuesto1,
+			f.PORCENTAJEIVA AS cPorcentajeImpuesto1,
+			0 as cPorcentajeRetencion1,
+			0 as cPorcentajeRetencion2,
+			dbo.fn_ObtenerCodigoAlmacen(con.IDSUCURSAL, con.IDEQUIPONUEVO, con.IDEQUIPOUSADO, con.IDREFACCION, con.MTIPO, con.DELAL) AS cCodigoAlmacen,
+			rtrim(pers.DelAl) AS cReferencia,
+			dbo.fn_AdaptarDescripcionObservacion(con.MTIPO, pers.Descripcion, ccf.codigoProducto, prod.cNombreProducto) AS cObservaMov,
+			pers.DelAl AS cTextoExtra1,
+			pers.Referencia AS cTextoExtra2,
+			Convert(varchar, pers.IdConFac) AS cTextoExtra3,--Se agrega campo de IDCONFAC para hacer los conceptos unicos, ya que el with con union estaba identificando campos como duplicados
+			dbo.fn_CalcularCostoEspecifico(
+				con.DELAL,
+				con.CANTIDAD,
+				ref.COSTOUNITARIO,
+				eqn.COSTONACIONAL,
+				eqr.COSTONACIONAL,
+				equ.COSTONACIONAL
+			) AS cCostoEspecifico,
+			ISNULL(equ.DEPRECIACIONCONTABLEANTERIOR, 0) as cImporteExtra1,
+			dbo.fn_CalcularImporteExtra(
+				con.DELAL,           -- Tipo de operación
+				con.CANTIDAD,        -- Cantidad
+				ref.COSTOUNITARIO,   -- Costo unitario refacción
+				eqn.COSTONACIONAL,   -- Costo nacional nuevo
+				eqr.COSTONACIONAL,   -- Costo nacional renta
+				equ.COSTONACIONAL    -- Costo nacional usado
+			) AS cImporteExtra2,
+			'' as cSCMovto
+		from Score.ConFacPersPorTimbrar as pers
+			join ConFacPersCodigoProd as ccf on ccf.Id = pers.Id
+			join Score.FacturaPorTimbrar AS f ON f.IDFACTURA = pers.FacturasNumero
+			join Score.ConFac as con on con.IDCONFAC = pers.IdConFac
+			left join Score.EquipoNuevo AS eqn ON eqn.IDEQUIPO = con.IDEQUIPONUEVO
+			left join Score.EquipoRenta AS eqr on eqr.IDEQUIPO = con.IDEQUIPORENTA
+			left join Score.EquipoUsado AS equ ON equ.IDEQUIPO = con.IDEQUIPOUSADO
+			left join Score.OTRefaccion AS ref ON ref.IDOTREFACCIONES = con.OTRLLAVEAUTONUMERICA
+			left join Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+		-- todo: Order by Ordinal
+),
+MovConFac as (
+	 Select std.* 
+	 	from MovConFacStd as std
+		where not exists (Select 1 from MovConFacPers as pers where pers.cIdDocumento = std.cIdDocumento)
+	Union all
+	Select * from MovConFacPers
+), -- Select * from MovConFac -- test
 AlmacenConReq as (
 	Select IDCONREQ,
 			case 

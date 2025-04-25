@@ -14,70 +14,77 @@ GO
 -- Cliente y ClienteSucursal
 Create or alter view [Score].[Cliente]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataClientes
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataClientes
 GO
 
 Create or alter view [Score].[ClienteSucursal]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataClientesSucursal
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataClientesSucursal
 GO
 
 Create or alter view [Score].[ConDev]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperConDev
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperConDev
 GO
 
 -- Concepto factura
 Create or alter view [Score].[ConFac]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperConFac
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperConFac
 GO
+
+-- Concepto personalizado factura
+-- Create or alter view [Score].[ConFacPers]
+-- As
+-- 	SELECT *
+-- 	FROM serverScore.IT_Rentas_pruebas.dbo.OperConFacPers
+-- GO
 
 -- Concepto ndc
 Create or alter view [Score].[ConNot]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperConNot
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperConNot
 GO
 
 -- concepto requisicion (ConReq)
 Create or alter view [Score].[ConReq]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperConReq
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperConReq
 GO
 
 Create or alter view [Score].[ConRM]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperConRM
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperConRM
 GO
 
 -- CuentaBanco
 Create or alter view [Score].[CuentaBanco]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.CataCuentasBancos
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.CataCuentasBancos
 GO
 
 -- Deposito
 Create or alter view [Score].[Deposito]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperDepositos
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperDepositos
 GO
 
 Create or alter view [Score].[DepositoPorTimbrar]
 As
-    Select OD.*,
-        CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS FechaStr
-    from serverScore.IT_Rentas_pruebas.dbo.OperDepositos as OD
-    where OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
-        and OD.TIMBRAR='S'
+	Select OD.*,
+		CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS FechaStr
+	from serverScore.IT_Rentas_pruebas.dbo.OperDepositos as OD
+	where OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
+		and OD.TIMBRAR='S'
 GO
 
 -- todo: DepositoPorTimbrar
@@ -85,236 +92,245 @@ GO
 -- Devolucion
 Create or alter view [Score].[Devolucion]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperDevoluciones
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperDevoluciones
 GO
 
 -- Equipo (Nuevo, Renta y Usado)
 Create or alter view [Score].[EquipoNuevo]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposNuevos
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposNuevos
 GO
 
 Create or alter view [Score].[EquipoRenta]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta
 GO
 
 Create or alter view [Score].[EquipoRentaDadoDeAlta]
 As
-    SELECT T0.*,
-        CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS FechaAltaSucursalStr
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta as T0
-    WHERE T0.PROPIETARIO = 'Hemoeco' 
-        AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
+	SELECT T0.*,
+		CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS FechaAltaSucursalStr
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta as T0
+	WHERE T0.PROPIETARIO = 'Hemoeco' 
+		AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
 GO
 
 Create or alter view [Score].[EquipoUsado]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposUsados
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposUsados
 GO
 
 -- Factura
 Create or alter view [Score].[Factura]
 As
-    -- opcionalemente podemos utilizar 'select *'
-    SELECT IDFACTURA,
-        IDSUCURSAL,
-        IDCENTROOPERATIVO,
-        CLIENTESNUMERO,
-        FOLIO,
-        IDEMPLEADO,
-        FECHA,
-        MONEDA,
-        FECHAVENCIMIENTO,
-        TOTAL,
-        SALDO,
-        FORMADEPAGO,
-        METODODEPAGO,
-        USOCFDI,
-        OBRASNUMERO,
-        TIPOCAMBIO,
-        IVA,
-        CANCELADA,
-        FOLIO2,
-        PROCESADA,
-        OBSERVACIONES,
-        ORDENDECOMPRA,
-        XML_ETIQUETA2,
-        XML_SUBTOTAL,
-        XML_TOTAL,
-        PORCENTAJEIVA,
-        dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
-        CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos,
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
+	-- opcionalemente podemos utilizar 'select *'
+	SELECT IDFACTURA,
+		IDSUCURSAL,
+		IDCENTROOPERATIVO,
+		CLIENTESNUMERO,
+		FOLIO,
+		IDEMPLEADO,
+		FECHA,
+		MONEDA,
+		FECHAVENCIMIENTO,
+		TOTAL,
+		SALDO,
+		FORMADEPAGO,
+		METODODEPAGO,
+		USOCFDI,
+		OBRASNUMERO,
+		TIPOCAMBIO,
+		IVA,
+		CANCELADA,
+		FOLIO2,
+		PROCESADA,
+		OBSERVACIONES,
+		ORDENDECOMPRA,
+		XML_ETIQUETA2,
+		XML_SUBTOTAL,
+		XML_TOTAL,
+		PORCENTAJEIVA,
+		dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
+		CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos,
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
 GO
 
 -- FacturaPago
 Create or alter view [Score].[FacturaPago]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperFacPag
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperFacPag
 GO
 
 Create or alter view [Score].[FacturaPorTimbrar]
 As
-    -- Factorizamos las notas de credito a timbrar para compartir entre
-    -- documentos y movimientos
-    SELECT *,
-        dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
-        CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos
-    -- FROM Score.Factura -- llamar a la tabla remota directamente es ligeramente má eficiente
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
-    WHERE TOTAL <> 0
-        AND CANCELADA = 'N'
-        AND FOLIO2 = ''
-        AND PROCESADA = 'N'
-        --  AND ISNULL(T4.FORMADEPAGO,'')<>''
-        AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
-        --  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
-    -- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
-    -- Where IDFACTURA in (466140,466141,460101,451204,449199,445635,424797,428267,428268,428489,428490,402271,404898,409615,412969,414075)
+	-- Factorizamos las notas de credito a timbrar para compartir entre
+	-- documentos y movimientos
+	SELECT *,
+		dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
+		CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos
+	-- FROM Score.Factura -- llamar a la tabla remota directamente es ligeramente má eficiente
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
+	WHERE TOTAL <> 0
+		AND CANCELADA = 'N'
+		AND FOLIO2 = ''
+		AND PROCESADA = 'N'
+		--  AND ISNULL(T4.FORMADEPAGO,'')<>''
+		AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
+		--  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
+	-- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
+	-- Where IDFACTURA in (466140,466141,460101,451204,449199,445635,424797,428267,428268,428489,428490,402271,404898,409615,412969,414075)
 GO
 
 -- dependiente de FacturaPorTimbrar
 Create or alter view [Score].[ConFacPorTimbrar]
 As
-    SELECT con.*
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperConFac as con
+	SELECT con.*
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperConFac as con
 		join Score.FacturaPorTimbrar as f on f.IDFACTURA = con.FACTURASNUMERO
+GO
+
+-- dependiente de FacturaPorTimbrar
+Create or alter view [Score].[ConFacPersPorTimbrar]
+As
+	SELECT pers.*,
+			dbo.fn_GetIdConFacOriginalUnico(pers.Id) as IdConFac
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperConFacPers as pers
+		join Score.FacturaPorTimbrar as f on f.IDFACTURA = pers.FacturasNumero
 GO
 
 Create or alter view [Score].[KardexAlta]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperKardexAltas
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperKardexAltas
 GO
 
 -- Linea
 Create or alter view [Score].[Linea]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataLineas
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataLineas
 GO
 
 Create or alter view [Score].[LineaSucursal]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataLineasSucursal
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataLineasSucursal
 GO
 
 -- Modelo
 Create or alter view [Score].[Modelo]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.CataModelos
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.CataModelos
 GO
 
 -- Nota de credito
 Create or alter view [Score].[NotaDeCredito]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
 GO
 
 Create or alter view [Score].[NotaDeCreditoPorTimbrar]
 As
-    -- Factorizamos las notas de credito a timbrar para compartir entre
-    -- documentos y movimientos
-    SELECT *
-        FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
-        WHERE TOTAL <> 0
-            AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
-            AND IDNOTASCREDITO not in (32977)
-            AND CERRADO = 'S'
+	-- Factorizamos las notas de credito a timbrar para compartir entre
+	-- documentos y movimientos
+	SELECT *
+		FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
+		WHERE TOTAL <> 0
+			AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
+			AND IDNOTASCREDITO not in (32977)
+			AND CERRADO = 'S'
 GO
 
 -- Obra
 Create or alter view [Score].[Obra]
 As
-    SELECT *
-    FROM serverScore.IT_Rentas_pruebas.dbo.CataObras
+	SELECT *
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataObras
 GO
 
 -- Orden de trabajo (OT)
 Create or alter view [Score].[OT]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
 GO
 
 -- OTRefaccion
 Create or alter view [Score].[OTRefaccion]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones
 GO
 
 -- Orden de trabajo por timbrar (OTPorTimbrar)
 Create or alter view [Score].[OTPorTimbrar]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
-    WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
-        AND FACTURASNUMERO = 0
-        and (select sum(CANTIDAD - CANTIDADDEVUELTA) from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = NUMERO) <> 0
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
+	WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
+		AND FACTURASNUMERO = 0
+		and (select sum(CANTIDAD - CANTIDADDEVUELTA) from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = NUMERO) <> 0
 GO
 
 -- Pago
 Create or alter view [Score].[Pago]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperPagos
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperPagos
 GO
 
 -- ParaCentOper
 Create or alter view [Score].[ParaCentOper]
 As
-    Select IDCENTROOPERATIVO,
-        IDSUCURSAL,
-        INICIALES
-    from serverScore.IT_Rentas_pruebas.dbo.ParaCentOper
+	Select IDCENTROOPERATIVO,
+		IDSUCURSAL,
+		INICIALES
+	from serverScore.IT_Rentas_pruebas.dbo.ParaCentOper
 GO
 
 -- ParaPreferencias
 Create or alter view [Score].[ParaPreferencias]
 As
-    Select IDPREFERENCIAS
-    from serverScore.IT_Rentas_pruebas.dbo.ParaPreferencias
+	Select IDPREFERENCIAS
+	from serverScore.IT_Rentas_pruebas.dbo.ParaPreferencias
 GO
 
 -- Proveedor
 Create or alter view [Score].[Proveedor]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.CataProveedores
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.CataProveedores
 GO
 
 -- Refaccion
 Create or alter view [Score].[Refaccion]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.CataRefacciones
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.CataRefacciones
 GO
 
 -- Requisición
 Create or alter view [Score].[Requisicion]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones
 GO
 
 Create or alter view [Score].[RequisicionPorTimbrar]
 As
-    Select T0.*,
-        CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS FechaRecibidaStr
-    from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones as T0
-        inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas_pruebas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
-    where T0.IDREQUISICION > 8492
-        and T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
+	Select T0.*,
+		CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS FechaRecibidaStr
+	from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones as T0
+		inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas_pruebas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
+	where T0.IDREQUISICION > 8492
+		and T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
 GO
 
 -- todo: RequisicionPorTimbrar
@@ -322,21 +338,49 @@ GO
 -- Recepción de mercancía (RM)
 Create or alter view [Score].[RM]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
 GO
 
 Create or alter view [Score].[RMPorTimbrar]
 As
-    Select *
-    from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
-    where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
-        AND Cerrada = 1
-        AND Estado = 'Contabilizada'
-        and IDRECEPCIONMERCANCIA > 36081
-        and IDRECEPCIONMERCANCIA not in (40384, 40639)
-        and Tipo NOT IN ('Consignación')
+	Select *
+	from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
+	where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
+		AND Cerrada = 1
+		AND Estado = 'Contabilizada'
+		and IDRECEPCIONMERCANCIA > 36081
+		and IDRECEPCIONMERCANCIA not in (40384, 40639)
+		and Tipo NOT IN ('Consignación')
 GO
+
+-- -- wrap function...
+-- Create or alter Function [Score].[fn_GetIdConFacOriginalUnico](@IdOperConFacPers UniqueIdentifier)
+-- RETURNS INT
+-- AS
+-- BEGIN
+-- 	DECLARE @IdConFacOriginalPrincipal INT;
+
+-- 	-- https://stackoverflow.com/questions/4125820/sql-server-how-to-call-a-user-defined-function-udf-on-linked-server
+-- 	EXEC serverScore.IT_Rentas_pruebas.dbo.sp_executesql
+-- 		N'SELECT IT_Rentas_pruebas.dbo.fn_GetIdConFacOriginalUnico(@IdOperConFacPers)' --dynamic sql query to execute
+-- 		,N'@IdOperConFacPers uniqueidentifier' --parameter definitions
+-- 		,@IdOperConFacPers --assigning the caller procs local variable to the dynamic parameter
+
+-- 	-- print @IdConFacOriginalPrincipal
+
+-- 	return @IdConFacOriginalPrincipal
+
+-- 	-- Other method to call external server fn
+-- 	-- Select @IdConFacOriginalPrincipal = idConFac FROM OPENQUERY(serverScore, 'SELECT dbo.fn_GetIdConFacOriginalUnico(''03fdf62a-346a-4f33-b2b3-2ac88dc2623d'') as idConFac');
+
+-- 	-- Msg 4121, Level 16, State 1, Line 1
+-- 	-- Cannot find either column "IT_Rentas_pruebas" or the user-defined function or aggregate "IT_Rentas_pruebas.dbo.fn_GetIdConFacOriginalUnico", or the name is ambiguous.
+-- 	-- SELECT * FROM OPENQUERY([serverScore], 'SELECT IT_Rentas_pruebas.dbo.fn_GetIdConFacOriginalUnico('6dace947-e4c4-4a34-bf65-e34dffde0756')')
+-- END
+-- GO
+-- -- Doesn't work result: No se permiten llamadas a funciones remotas en una función.
+-- -- print Score.fn_GetIdConFacOriginalUnico('03fdf62a-346a-4f33-b2b3-2ac88dc2623d')
 
 /* -- Tests
 Select top 10 * from Score.Cliente

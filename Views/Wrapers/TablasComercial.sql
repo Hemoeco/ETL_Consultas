@@ -49,6 +49,16 @@ As
     FROM serverContabilidad.ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio
 GO
 
+Create or alter view [Comercial].[ProductoYUnidad]
+As
+    SELECT CCODIGOPRODUCTO, 
+        CNOMBREPRODUCTO, 
+        p.CCLAVESAT as claveProdServSAT, 
+        CCLAVEINT as claveUnidadSAT
+	FROM serverContabilidad.adhemoeco_prueba.dbo.admProductos AS p
+		JOIN serverContabilidad.adhemoeco_prueba.dbo.admUnidadesMedidaPeso AS adu ON adu.CIDUNIDAD = p.CIDUNIDADBASE
+GO
+
 /* -- Tests
 Select top 10 * from Comercial.Almacen
 Select top 10 * from Comercial.Comprobante
