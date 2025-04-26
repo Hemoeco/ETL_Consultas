@@ -222,6 +222,14 @@ As
 	FROM serverScore.IT_Rentas_pruebas.dbo.CataLineasSucursal
 GO
 
+-- Linea para importar a Comercial
+Create or alter view [Score].[LineaConCodSAT]
+As
+	SELECT IDLINEA, rtrim(CODSAT) as CODSAT
+	FROM serverScore.IT_Rentas_pruebas.dbo.CataLineas
+	WHERE CODSAT is not null
+GO
+
 -- Modelo
 Create or alter view [Score].[Modelo]
 As
@@ -316,6 +324,14 @@ As
 	from serverScore.IT_Rentas_pruebas.dbo.CataRefacciones
 GO
 
+-- Refacciones aptas para importar
+Create or alter view [Score].[RefaccionConCodSAT]
+As
+	Select IDREFACCION, RTRIM(CODSAT) as CODSAT
+	from serverScore.IT_Rentas_pruebas.dbo.CataRefacciones
+	where CODSAT is not null
+GO
+
 -- Requisición
 Create or alter view [Score].[Requisicion]
 As
@@ -402,6 +418,7 @@ Select top 10 * from Score.FacturaPago
 Select top 10 * from Score.FacturaPorTimbrar
 Select top 10 * from Score.KardexAlta
 Select top 10 * from Score.Linea
+Select top 10 * from Score.LineaConCodSAT
 Select top 10 * from Score.LineaSucursal
 Select top 10 * from Score.Modelo
 Select top 10 * from Score.NotaDeCredito
@@ -415,6 +432,7 @@ Select top 10 * from Score.ParaCentOper
 Select top 10 * from Score.ParaPreferencias
 Select top 10 * from Score.Proveedor
 Select top 10 * from Score.Refaccion
+Select top 10 * from Score.RefaccionConCodSAT
 Select top 10 * from Score.Requisicion
 Select top 10 * from Score.RM
 Select top 10 * from Score.RMPorTimbrar

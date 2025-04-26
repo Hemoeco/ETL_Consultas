@@ -8,13 +8,13 @@
 -- ***********************************************************
 CREATE OR ALTER FUNCTION fn_ConsultarCodigoProducto (
     @descripcion VARCHAR(100),
-    @claveProdServ VARCHAR(20), -- SAT
-    @claveUnidad VARCHAR(20)    -- SAT
+    @claveProdServ CHAR(8), -- SAT
+    @claveUnidad CHAR(3)    -- SAT
 )
-RETURNS VARCHAR(50) --CCODIGOPRODUCTO
+RETURNS VARCHAR(30) --CCODIGOPRODUCTO
 AS
 BEGIN
-    DECLARE @codigoProducto VARCHAR(50);
+    DECLARE @codigoProducto VARCHAR(30);
 
     SELECT @codigoProducto = CCODIGOPRODUCTO
     FROM [Comercial].[ProductoYUnidad]

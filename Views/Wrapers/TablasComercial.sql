@@ -43,6 +43,12 @@ As
     FROM serverContabilidad.adhemoeco_prueba.dbo.admProductos
 GO
 
+Create or alter view [Comercial].[UnidadMedida]
+As
+    SELECT *
+    FROM serverContabilidad.adhemoeco_prueba.dbo.admUnidadesMedidaPeso
+GO
+
 Create or alter view [Comercial].[TipoCambio]
 As
     SELECT *
@@ -67,4 +73,5 @@ Select top 10 * from Comercial.Documento
 Select top 10 * from Comercial.Parametro
 Select top 10 * from Comercial.Producto
 Select top 10 * from Comercial.TipoCambio
+Select top 10 * from Comercial.UnidadMedida
 */
