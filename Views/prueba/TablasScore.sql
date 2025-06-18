@@ -116,6 +116,7 @@ As
 	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta as T0
 	WHERE T0.PROPIETARIO = 'Hemoeco' 
 		AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
+		and 0=1
 GO
 
 Create or alter view [Score].[EquipoUsado]
@@ -155,7 +156,7 @@ As
 		XML_TOTAL,
 		PORCENTAJEIVA,
 		dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
-		CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos,
+		dbo.fn_FechaITaETL(FECHA) as FechaFacturaStr -- compartir esta fecha en varios puntos de Documentos,
 	FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
 GO
 
@@ -198,7 +199,8 @@ GO
 Create or alter view [Score].[ConFacPersPorTimbrar]
 As
 	SELECT pers.*,
-			dbo.fn_GetIdConFacOriginalUnico(pers.Id) as IdConFac
+			-- dbo.fn_GetIdConFacOriginalUnico(pers.Id) as IdConFac  puede reemplazarse con 'IdConFacOriginal', que ahora siempre se llena
+			IdConFacOriginal as IdConFac
 	FROM serverScore.IT_Rentas_pruebas.dbo.OperConFacPers as pers
 		join Score.FacturaPorTimbrar as f on f.IDFACTURA = pers.FacturasNumero
 GO
@@ -254,6 +256,7 @@ As
 			AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
 			AND IDNOTASCREDITO not in (32977)
 			AND CERRADO = 'S'
+			AND 0 = 1
 GO
 
 -- Obra
@@ -285,6 +288,7 @@ As
 	WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 		AND FACTURASNUMERO = 0
 		and (select sum(CANTIDAD - CANTIDADDEVUELTA) from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = NUMERO) <> 0
+		and 0=1
 GO
 
 -- Pago
@@ -347,6 +351,7 @@ As
 		inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas_pruebas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
 	where T0.IDREQUISICION > 8492
 		and T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
+		and 0 = 1
 GO
 
 -- todo: RequisicionPorTimbrar
@@ -368,35 +373,8 @@ As
 		and IDRECEPCIONMERCANCIA > 36081
 		and IDRECEPCIONMERCANCIA not in (40384, 40639)
 		and Tipo NOT IN ('Consignación')
+		and 0 = 1
 GO
-
--- -- wrap function...
--- Create or alter Function [Score].[fn_GetIdConFacOriginalUnico](@IdOperConFacPers UniqueIdentifier)
--- RETURNS INT
--- AS
--- BEGIN
--- 	DECLARE @IdConFacOriginalPrincipal INT;
-
--- 	-- https://stackoverflow.com/questions/4125820/sql-server-how-to-call-a-user-defined-function-udf-on-linked-server
--- 	EXEC serverScore.IT_Rentas_pruebas.dbo.sp_executesql
--- 		N'SELECT IT_Rentas_pruebas.dbo.fn_GetIdConFacOriginalUnico(@IdOperConFacPers)' --dynamic sql query to execute
--- 		,N'@IdOperConFacPers uniqueidentifier' --parameter definitions
--- 		,@IdOperConFacPers --assigning the caller procs local variable to the dynamic parameter
-
--- 	-- print @IdConFacOriginalPrincipal
-
--- 	return @IdConFacOriginalPrincipal
-
--- 	-- Other method to call external server fn
--- 	-- Select @IdConFacOriginalPrincipal = idConFac FROM OPENQUERY(serverScore, 'SELECT dbo.fn_GetIdConFacOriginalUnico(''03fdf62a-346a-4f33-b2b3-2ac88dc2623d'') as idConFac');
-
--- 	-- Msg 4121, Level 16, State 1, Line 1
--- 	-- Cannot find either column "IT_Rentas_pruebas" or the user-defined function or aggregate "IT_Rentas_pruebas.dbo.fn_GetIdConFacOriginalUnico", or the name is ambiguous.
--- 	-- SELECT * FROM OPENQUERY([serverScore], 'SELECT IT_Rentas_pruebas.dbo.fn_GetIdConFacOriginalUnico('6dace947-e4c4-4a34-bf65-e34dffde0756')')
--- END
--- GO
--- -- Doesn't work result: No se permiten llamadas a funciones remotas en una función.
--- -- print Score.fn_GetIdConFacOriginalUnico('03fdf62a-346a-4f33-b2b3-2ac88dc2623d')
 
 /* -- Tests
 Select top 10 * from Score.Cliente

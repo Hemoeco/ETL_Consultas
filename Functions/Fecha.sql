@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
 -- Hemoeco Renta (2025)
 --
--- FUnción para calcula fecha (datetime) a partir de un
+-- Función para calcula fecha (datetime) a partir de un
 -- entero untilizado por Score (Clarion)
  ---------------------------------------------------- */
  
- CREATE Function [dbo].[Fecha](@Fecha Int) Returns dateTime
+ CREATE or alter Function [dbo].[Fecha](@Fecha Int) Returns dateTime
    AS
     Begin
       Declare @FechaJul DateTime
@@ -18,7 +18,7 @@
 
 GO
 
-Grant Execute, view definition on dbo.Fecha to public;
+Grant Execute, view definition on [dbo].[Fecha] to public;
 
 -- -- Tests
 -- -- To run test, just uncomment 

@@ -12,7 +12,9 @@ Alter role [db_backupoperator] Add Member [cesar.vargas]
 Alter role [db_datareader] Add Member [cesar.vargas]
 Alter role [db_datawriter] Add Member [cesar.vargas]
 Alter role [db_ddladmin] Add Member [cesar.vargas]
+Alter role [db_securityadmin] Add Member [cesar.vargas] -- necesario para "grant view permission to public..."
 -- Alter role [db_owner] Add Member [cesar.vargas]
+-- Alter role [db_owner] Drop Member [cesar.vargas]
 go
 
 Use [adhemoeco_prueba]

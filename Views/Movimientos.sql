@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
 -- Hemoeco Renta (2025)
--- Script: Documentos.sql
+-- Script: Movimientos.sql
 -- Vista para la consulta de documentos
 -- lee los documentos de Score para importarlos a Comercial
 ------------------------------------------------------- */
@@ -35,10 +35,10 @@ with CantidadConFac as (
 			join Score.FacturaPorTimbrar as f on f.IDFACTURA = con.FACTURASNUMERO
 ), -- test select * from CantidadConFac,
 ConFacPersCodigoProd as (
-	SELECT Id, 
+	SELECT Id, -- Descripcion, C_ClaveProdServ, C_ClaveUnidad,
 			dbo.fn_ConsultarCodigoProducto(Descripcion, C_ClaveProdServ, C_ClaveUnidad) AS CodigoProducto
 		from Score.ConFacPersPorTimbrar as pers
-),
+), -- Select * from ConFacPersCodigoProd -- Test
 MovConFacStd as (
 	SELECT CONCAT('FAC', T0.FACTURASNUMERO) AS cIdDocumento,
 		ccf.codigoProducto AS cCodigoProducto,
@@ -132,6 +132,7 @@ MovConFacPers as (
 			left join Score.EquipoUsado AS equ ON equ.IDEQUIPO = con.IDEQUIPOUSADO
 			left join Score.OTRefaccion AS ref ON ref.IDOTREFACCIONES = con.OTRLLAVEAUTONUMERICA
 			left join Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+		-- No funciona Order by pers.FacturasNumero, Ordinal, con.MTIPO, pers.Cantidad, pers.ValorUnitario
 		-- todo: Order by Ordinal
 ), -- Select * from MovConFacPers -- test
 MovConFac as (

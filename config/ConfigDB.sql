@@ -69,3 +69,15 @@ begin
 end
 go
 
+-- Crear tabla para depurar
+if (OBJECT_ID('Hemoeco_Debug') is null)
+   Create table Hemoeco_Debug(
+      IsEnenabled bit not null
+   )
+-- drop table Hemoeco_Debug
+if schema_id('debug') is null
+begin
+   execute('Create schema [debug] authorization dbo')
+end
+go
+

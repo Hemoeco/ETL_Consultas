@@ -2,7 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE FUNCTION [dbo].[fn_split_string_to_column] (
+CREATE OR ALTER FUNCTION [dbo].[fn_split_string_to_column] (
     @string NVARCHAR(MAX),
     @delimiter CHAR(1)
     )

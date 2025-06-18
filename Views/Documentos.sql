@@ -5,12 +5,13 @@
 -- lee los documentos de Score para importarlos a Comercial
  ---------------------------------------------------- */
 
+-- clean up drop view [dbo].[Documentos]
 CREATE OR ALTER VIEW [dbo].[Documentos] AS
 With DocFactura
 as (SELECT Concat('FAC', IDFACTURA) AS cIdDocumento,
 	T0.FechaFacturaStr AS cFecha,
 	--CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA + T4.DIASCREDITO), 101) AS cFechaVencimiento, 
-	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHAVENCIMIENTO), 101) AS cFechaVencimiento,
+	dbo.FechaITaETL(T0.FECHAVENCIMIENTO) AS cFechaVencimiento,
 	T0.FechaFacturaStr AS cFechaEntregaRecepcion,
 	rtrim(T06.CCODIGOCONCEPTO) AS cCodigoConcepto,
 	CONVERT(varchar, CLIENTESNUMERO) AS cCodigoCteProv,
@@ -50,7 +51,7 @@ FROM Score.FacturaPorTimbrar T0
 	LEFT JOIN Score.Obra T2 ON T2.IDCLIENTE = T0.CLIENTESNUMERO AND T2.NUMERO = T0.OBRASNUMERO
 	LEFT JOIN Comercial.Documento AS T08 ON T08.CIDCONCEPTODOCUMENTO = T06.CIDCONCEPTODOCUMENTO AND T08.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDFACTURA) COLLATE Modern_Spanish_CI_AS
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.MOneda = 2 AND T9.Tipo = 1 AND T9.Fecha = T0.FechaFactura
-),
+), -- test Select * from DocFactura
 PagosDeposito as (select OP.DEPOSITOSNUMERO,
 					OP.IDFORMAPAGO, OP.IDSUCURSAL, OP.CLIENTESNUMERO, OP.IDCUENTABANCOS,
 					sum(case when T2.METODODEPAGO='PUE' then 1 else 0 end) as PUE,
@@ -65,7 +66,6 @@ PagosDeposito as (select OP.DEPOSITOSNUMERO,
 SELECT * FROM DocFactura
 
 UNION ALL
-
 -- Notas de credito
 SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
@@ -121,7 +121,6 @@ WHERE T5.CIDDOCUMENTO IS NULL
 	-- AND T0.IDNOTASCREDITO not in ('32977')
 	-- AND T0.CERRADO = 'S'
 UNION ALL
-
 -- Compras y recepciones
 /*
 SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
@@ -220,7 +219,7 @@ WHERE T1.cFolio IS NULL
   -- and T0.IDRECEPCIONMERCANCIA > 36081
   -- and T0.IDRECEPCIONMERCANCIA not in (40384, 40639)
   -- and T0.Tipo NOT IN ('Consignación')
- 
+
 /*UNION ALL
 -- Devoluciones a proveedores
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
@@ -265,9 +264,7 @@ WHERE year(dbo.fecha(FECHA)) >= 2019
   and dbo.fecha(T0.FECHA) >='20191001'
   and T0.IDDEVOLUCION > '477'
 */
-
 UNION ALL
-
 -- Ordenes de trabajo
 SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHATERMINADO), 101) AS cFecha,
@@ -309,9 +306,7 @@ WHERE T3.cFolio IS NULL
 --   AND T0.FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 --   AND T0.FACTURASNUMERO = 0
 --   and (select sum(CANTIDAD - CANTIDADDEVUELTA) from Score.OTRefaccion where ORDENESTRABAJONUMERO = T0.NUMERO) <> 0
-
 UNION ALL
-
 -- Transpasos y requisiciones
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	T0.FechaRecibidaStr AS cFecha,
@@ -352,9 +347,7 @@ WHERE T3.cFolio IS NULL
   -- Incluidas en RequisicionPorTimbrar
   -- and T0.IDREQUISICION > '8492'
   -- AND T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
-
 UNION ALL
-
 -- Alta en renta
 SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	T0.FechaAltaSucursalStr AS cFecha,
@@ -397,9 +390,7 @@ WHERE T4.CIDDOCUMENTO is null
 -- Incluido en EquipoRentaDadoDeAlta
 --   AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
 --   AND T0.PROPIETARIO = 'Hemoeco'
-
 UNION ALL
-
 -- Pagos (Depositos)
 SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,
 	CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS cFecha,
@@ -446,9 +437,9 @@ where M8.CIDDOCUMENTO is null
 	and '10' <> case when OP.PUE>0 or OD.IMPORTE*CASE WHEN (LEFT(OD.Moneda, 1) = 'P') THEN 1 ELSE OD.TIPOCAMBIO END < 10 then '10' else 'PPD' end  -- se comenta para poder contabilizar los pagos PUE
 GO
 
--- -- Tests
--- SELECT * FROM Documentos
--- SELECT * FROM Documentos order by cIdDocumento
--- Select top 10 * from Documentos
--- Select top 10 * from Documentos where cIdDocumento like 'FAC%'
--- SELECT TOP(10) * FROM admProductos WHERE cCodigoProducto LIKE 'mod%'
+-- -- -- Tests
+-- -- SELECT * FROM Documentos
+-- -- SELECT * FROM Documentos order by cIdDocumento
+-- -- Select top 10 * from Documentos
+-- -- Select top 10 * from Documentos where cIdDocumento like 'FAC%'
+-- -- SELECT TOP(10) * FROM admProductos WHERE cCodigoProducto LIKE 'mod%'

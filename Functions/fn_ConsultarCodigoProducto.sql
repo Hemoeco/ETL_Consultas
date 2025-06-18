@@ -16,6 +16,7 @@ AS
 BEGIN
     DECLARE @codigoProducto VARCHAR(30);
 
+    -- mantener en sincronía estas condiciones en 'fn_CrearCodigoProdPers' y 'fn_ConsultarCodigoProducto' (aqui)
     SELECT @codigoProducto = CCODIGOPRODUCTO
     FROM [Comercial].[ProductoYUnidad]
     WHERE 
@@ -42,3 +43,4 @@ GO
 -- Print dbo.fn_ConsultarCodigoProducto('Renta de generador MDW500', '72141700', 'DAY') -- REN
 -- Print dbo.fn_ConsultarCodigoProducto('Servicio a obra', '72101500', 'E48') -- SRV
 -- Print dbo.fn_ConsultarCodigoProducto('Anticipo de renta', '84111506', 'ACT') -- ANT
+-- Print dbo.fn_ConsultarCodigoProducto('Reparación de maquina', '72141700', 'E48') -- null

@@ -4,7 +4,7 @@
 -- Vista para obtener datos de concepto desde Comercial
 ------------------------------------------------------- */
 
-use ETL_Pruebas_Cesar
+-- use ETL_Pruebas_Cesar
 GO
 
 Create or alter view [Comercial].[Almacen]

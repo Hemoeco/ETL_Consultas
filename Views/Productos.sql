@@ -73,17 +73,19 @@ ConFacPersCodigoProd as (
 		C_ClaveProdServ,
 		C_ClaveUnidad,
 		MTIPO,
-		SUBSTRING(pers.Descripcion, 1, CHARINDEX(' ', pers.Descripcion + ' ') - 1) AS PrimerPalabraDesc,
+		pers.Descripcion,
+		dbo.fn_PrimerPalabra(pers.Descripcion) AS PrimerPalabraDesc,
 		case
 			when MTIPO in ('Refacción', 'Venta Nuevo', 'Venta Usado') then 1 -- = Producto
 			else 3 -- = Servicio
 		end as tipoProducto
+		-- test , dbo.fn_ConsultarCodigoProducto(pers.Descripcion, pers.C_ClaveProdServ, pers.C_ClaveUnidad) as p
 		from Score.ConFacPersPorTimbrar as pers
 			join Score.ConFacPorTimbrar as cft on cft.IDCONFAC = pers.IdConFac
-		where dbo.fn_ConsultarCodigoProducto(pers.Descripcion, C_ClaveProdServ, C_ClaveUnidad) is null
-),
+		where dbo.fn_ConsultarCodigoProducto(pers.Descripcion, pers.C_ClaveProdServ, pers.C_ClaveUnidad) is null
+), -- select * from ConFacPersCodigoProd -- test
 ProdPersAImportar as (
-	SELECT dbo.fn_CrearCodigoProdPers(MTIPO, C_ClaveProdServ, C_ClaveUnidad) AS cCodigoProducto,
+	SELECT dbo.fn_CrearCodigoProdPers(MTIPO, C_ClaveProdServ, C_ClaveUnidad, Descripcion) AS cCodigoProducto,
 		PrimerPalabraDesc AS cNombreProducto,
 		tipoProducto AS cTipoProducto,
 		Iif(tipoProducto = 1, 1, 7) AS cMetodoCosteo, -- Si es producto, el método de costeo es 1, si es servicio, el método de costeo es 7
@@ -145,5 +147,7 @@ GO
 
 -- Test
 -- Select * from Comercial.Producto where cCodigoProducto = 'REF41693'
+-- -- exec debug.sp_EnableHemoecoDebug
+-- -- exec debug.sp_DisableHemoecoDebug
 -- Select * from Productos order by cCodigoProducto
 -- Select top 10 * from Productos
