@@ -53,6 +53,10 @@ BEGIN
    -- @rmtpassword = '';
 END
 
+-- Cambiar la base de datos en la cual se qiuere trabajar
+-- use etlPRUEBA, etlHemoeco
+use ETL_temp_local
+
 -- Enable RPC to be able to query data in Score server from ETL database (see Pruebas\TestCallConFac.sql)
 EXEC sp_serveroption @server=@SERVER_NAME, @optname=N'RPC out', @optvalue=N'true'
 
