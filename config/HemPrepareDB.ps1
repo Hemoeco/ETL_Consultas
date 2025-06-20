@@ -1,13 +1,13 @@
 #Hemoeco Renta (2025)
 
-if (-not $env:sqlcmdUser) {
-    Write-Error "Por favor configure la variable de entorno 'sqlcmdUser'..."
+if (-not $env:ETLUsuario) {
+    Write-Error "Por favor configure la variable de entorno 'ETLUsuario'..."
     exit 1
 }
 
 # Validar si la variable de entorno sqlcmdPassword está definida
-if (-not $env:sqlcmdPassword) {
-    Write-Error "Por favor configure la variable de entorno 'sqlcmdPassword'..."
+if (-not $env:ETLContrasenia) {
+    Write-Error "Por favor configure la variable de entorno 'ETLContrasenia'..."
     exit 1
 }
 
@@ -18,20 +18,19 @@ if (-not $configuracion -or ($configuracion -ne "prueba" -and $configuracion -ne
     exit 1
 }
 
-# Validar si la variable de entorno sqlcmdPassword está definida
-if (-not $env:sqlcmdPassword) {
-    Write-Error "Por favor configure la variable de entorno 'sqlcmdPassword'..."
-    exit 1
-}
-
 
 # Configuración de conexión
-$Env:sqlcmdServer="localhost\SQLEXPRESS"
+# $Env:sqlcmdServer="192.168.111.13\COMPAC"
+$Env:sqlcmdServer=".\SQLExpress" # servidor local, cambiar si es necesario"
 
 # la base de datos a utilizar debe existir, crearla con un usuario que tenga permisos adecuados,
 # después correr el script ConfigDB.sql para crear los servidores relacionados. Opcionalmente, puede
 # correr ETL_Users.sql para crear un usuario de pruebas con permisos para correr todos estos scripts.
-$Env:sqlcmdDbName="Test_ETL_local_Cesar"
+$Env:sqlcmdDbName="ETL_temp_local"
+
+# copiar usuario y contraseña de la variable de entorno
+$env:sqlcmdUser = $env:ETLUsuario
+$env:sqlcmdPassword = $env:ETLContrasenia
 
 #presentacion
 [System.Console]::ForegroundColor = "Magenta"
@@ -62,7 +61,7 @@ try {
     ./RunSqlScript.ps1 ../Functions/fn_ConsultarCodigoProducto.sql
     ./RunSqlScript.ps1 ../Functions/fn_CrearCodigoProdPers.sql
     ./RunSqlScript.ps1 ../Functions/fn_FechaIT.sql
-    ./RunSqlScript.ps1 ../Functions/fn_FechaITAETL.sql
+    ./RunSqlScript.ps1 ../Functions/fn_FechaITaETL.sql
     ./RunSqlScript.ps1 ../Functions/fn_IncluirAPartirDe.sql
     ./RunSqlScript.ps1 ../Functions/fn_ObtenerCodigoAlmacen.sql
     ./RunSqlScript.ps1 ../Functions/fn_ObtenerCodigoProducto.sql
