@@ -10,8 +10,8 @@ CREATE OR ALTER VIEW [dbo].[Documentos] AS
 With DocFactura
 as (SELECT Concat('FAC', IDFACTURA) AS cIdDocumento,
 	T0.FechaFacturaStr AS cFecha,
-	--CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA + T4.DIASCREDITO), 101) AS cFechaVencimiento, 
-	dbo.FechaITaETL(T0.FECHAVENCIMIENTO) AS cFechaVencimiento,
+	--CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA + T4.DIASCREDITO), 101) AS cFechaVencimiento,
+	dbo.fn_FechaITaETL(T0.FECHAVENCIMIENTO) AS cFechaVencimiento,
 	T0.FechaFacturaStr AS cFechaEntregaRecepcion,
 	rtrim(T06.CCODIGOCONCEPTO) AS cCodigoConcepto,
 	CONVERT(varchar, CLIENTESNUMERO) AS cCodigoCteProv,
@@ -68,9 +68,9 @@ SELECT * FROM DocFactura
 UNION ALL
 -- Notas de credito
 SELECT 'NC' + CONVERT(varchar, T0.IDNOTASCREDITO) AS cIdDocumento,
-	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFecha,
-	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFechaVencimiento, 
-	CONVERT(VARCHAR(10), dbo.Fecha(T0.FECHA), 101) AS cFechaEntregaRecepcion,
+	T0.FechaStr AS cFecha,
+	T0.FechaStr AS cFechaVencimiento, 
+	T0.FechaStr AS cFechaEntregaRecepcion,
 	rtrim(T4.CCODIGOCONCEPTO) AS cCodigoConcepto,
 	CONVERT(varchar, T0.CLIENTESNUMERO) AS cCodigoCteProv,
 	'N' + case when T6.TIPO='Descuento' then 'F' else '' end + rtrim(T1.INICIALES) AS cSerieDocumento,
@@ -171,8 +171,8 @@ WHERE year(dbo.fecha(FECHARECEPCION)) >= 2024
 */
 -- Cambio para volver importar RM con mismo ID y Canceladas en Comercial
 SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
-	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHADOCUMENTO), 101) AS cFecha,
-	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHADOCUMENTO), 101) AS cFechaVencimiento,
+	T0.FechaDocumentoStr AS cFecha,
+	T0.FechaDocumentoStr AS cFechaVencimiento,
 	CONVERT(VARCHAR(10), EOMONTH(dbo.Fecha(T0.FECHADOCUMENTO)), 101) AS cFechaEntregaRecepcion,
 	rtrim(T3.CCODIGOCONCEPTO) AS cCodigoConcepto,
 	'P' + REPLICATE('0', 5 - LEN(T0.IDPROVEEDOR)) + CONVERT(varchar, T0.IDPROVEEDOR) AS cCodigoCteProv,
@@ -267,9 +267,9 @@ WHERE year(dbo.fecha(FECHA)) >= 2019
 UNION ALL
 -- Ordenes de trabajo
 SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
-	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHATERMINADO), 101) AS cFecha,
-	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHATERMINADO), 101) AS cFechaVencimiento,
-	CONVERT(VARCHAR(10), dbo.fecha(T0.FECHATERMINADO), 101) AS cFechaEntregaRecepcion,
+	T0.FechaTerminadoStr AS cFecha,
+	T0.FechaTerminadoStr AS cFechaVencimiento,
+	T0.FechaTerminadoStr AS cFechaEntregaRecepcion,
 	rtrim(T2.CCODIGOCONCEPTO) AS cCodigoConcepto,
 	'20902' AS cCodigoCteProv,
 	rtrim(T1.INICIALES) AS cSerieDocumento,
@@ -393,9 +393,9 @@ WHERE T4.CIDDOCUMENTO is null
 UNION ALL
 -- Pagos (Depositos)
 SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,
-	CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS cFecha,
-	CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS cFechaVencimiento,
-	CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS cFechaEntregaRecepcion,
+	OD.FechaStr AS cFecha,
+	OD.FechaStr AS cFechaVencimiento,
+	OD.FechaStr AS cFechaEntregaRecepcion,
 	'PDC' + dbo.fn_StdCentOper(OD.IDCENTROOPERATIVO) + CASE WHEN LEFT(OD.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END + '40' AS cCodigoConcepto,
 	(select top(1) convert(varchar,CLIENTESNUMERO) from Score.Pago where DEPOSITOSNUMERO = OD.IDDEPOSITO) AS cCodigoCteProv,
 	'P' + rtrim(PCO.INICIALES) AS cSerieDocumento,

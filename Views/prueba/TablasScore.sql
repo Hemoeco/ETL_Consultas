@@ -81,13 +81,12 @@ GO
 Create or alter view [Score].[DepositoPorTimbrar]
 As
 	Select OD.*,
-		CONVERT(VARCHAR(10), dbo.fecha(OD.FECHA), 101) AS FechaStr
+		dbo.fn_FechaITaETL(OD.FECHA) AS FechaStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperDepositos as OD
 	where OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
 		and OD.TIMBRAR='S'
+		and OD.IDDEPOSITO > 405000 -- Solo pruebas
 GO
-
--- todo: DepositoPorTimbrar
 
 -- Devolucion
 Create or alter view [Score].[Devolucion]
@@ -250,7 +249,8 @@ Create or alter view [Score].[NotaDeCreditoPorTimbrar]
 As
 	-- Factorizamos las notas de credito a timbrar para compartir entre
 	-- documentos y movimientos
-	SELECT *
+	SELECT *,
+		dbo.fn_FechaITaETL(FECHA) as FechaStr
 		FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
 		WHERE TOTAL <> 0
 			AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
@@ -283,7 +283,8 @@ GO
 -- Orden de trabajo por timbrar (OTPorTimbrar)
 Create or alter view [Score].[OTPorTimbrar]
 As
-	Select *
+	Select *,
+	dbo.fn_FechaITaETL(FECHATERMINADO) AS FechaTerminadoStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
 	WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 		AND FACTURASNUMERO = 0
@@ -365,7 +366,8 @@ GO
 
 Create or alter view [Score].[RMPorTimbrar]
 As
-	Select *
+	Select *,
+	dbo.fn_FechaITaETL(FECHADOCUMENTO) as FechaDocumentoStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
 	where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
 		AND Cerrada = 1
@@ -387,6 +389,7 @@ Select top 10 * from Score.ConReq
 Select top 10 * from Score.ConRM
 Select top 10 * from Score.CuentaBanco
 Select top 10 * from Score.Deposito
+Select top 10 * from Score.DepositoPorTimbrar
 Select top 10 * from Score.Devolucion
 Select top 10 * from Score.EquipoNuevo
 Select top 10 * from Score.EquipoRenta
@@ -414,5 +417,4 @@ Select top 10 * from Score.RefaccionConCodSAT
 Select top 10 * from Score.Requisicion
 Select top 10 * from Score.RM
 Select top 10 * from Score.RMPorTimbrar
--- todo: DepositoPorTimbrar
 */
