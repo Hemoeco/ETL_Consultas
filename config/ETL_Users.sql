@@ -2,7 +2,7 @@
 -- creación de usuarios para ETL
 
 -- Cesar
-Use [etlPRUEBA]
+-- Use [etlPRUEBA]
 go
 
 Create Login [cesar.vargas] with password = ''

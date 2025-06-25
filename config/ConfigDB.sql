@@ -54,8 +54,12 @@ BEGIN
 END
 
 -- Cambiar la base de datos en la cual se qiuere trabajar
+-- la BD requiere:
+-- Colation = "Modern_Spanish_CI_AS",
+-- Compatibility Level = SQL Server 2016 (130)
 -- use etlPRUEBA, etlHemoeco
-use ETL_temp_local
+-- use ETL_temp_local
+use ETL_Prod_Cesar
 
 -- Enable RPC to be able to query data in Score server from ETL database (see Pruebas\TestCallConFac.sql)
 EXEC sp_serveroption @server=@SERVER_NAME, @optname=N'RPC out', @optvalue=N'true'
@@ -76,7 +80,7 @@ go
 -- Crear tabla para depurar
 if (OBJECT_ID('Hemoeco_Debug') is null)
    Create table Hemoeco_Debug(
-      IsEnenabled bit not null
+      IsEnabled bit not null
    )
 -- drop table Hemoeco_Debug
 if schema_id('debug') is null

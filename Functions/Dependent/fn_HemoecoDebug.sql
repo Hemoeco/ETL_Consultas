@@ -18,7 +18,7 @@ returns bit
 AS
 Begin
     declare @result bit;
-    Select top 1 @result = IsEnenabled from Hemoeco_Debug
+    Select top 1 @result = IsEnabled from Hemoeco_Debug
     if (@result is null)
         return 0;
 
@@ -52,12 +52,12 @@ Create or alter proc [debug].[sp_SetHemoecoDebugStatus]
     @newValue bit
 AS
 Begin
-    if exists(Select top 1 IsEnenabled from Hemoeco_Debug)
+    if exists(Select top 1 IsEnabled from Hemoeco_Debug)
         begin
-            update Hemoeco_Debug set IsEnenabled = @newValue;
+            update Hemoeco_Debug set IsEnabled = @newValue;
         end
     else
-        insert into Hemoeco_Debug(IsEnenabled) values(@newValue);
+        insert into Hemoeco_Debug(IsEnabled) values(@newValue);
 
     print 'Hemoeco debug is ' + debug.fn_HemoecoDebugVerboseStatus()
 End
