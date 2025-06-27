@@ -59,7 +59,8 @@ END
 -- Compatibility Level = SQL Server 2016 (130)
 -- use etlPRUEBA, etlHemoeco
 -- use ETL_temp_local
-use ETL_Prod_Cesar
+-- use ETL_Prod_Cesar
+-- use etlHemoeco -- prod!
 
 -- Enable RPC to be able to query data in Score server from ETL database (see Pruebas\TestCallConFac.sql)
 EXEC sp_serveroption @server=@SERVER_NAME, @optname=N'RPC out', @optvalue=N'true'
