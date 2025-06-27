@@ -115,7 +115,7 @@ As
 	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta as T0
 	WHERE T0.PROPIETARIO = 'Hemoeco' 
 		AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
-		and 0=1
+		and 0 = 1 -- Solo pruebas
 GO
 
 Create or alter view [Score].[EquipoUsado]
@@ -256,7 +256,7 @@ As
 			AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
 			AND IDNOTASCREDITO not in (32977)
 			AND CERRADO = 'S'
-			AND 0 = 1
+			AND 0 = 1 -- Solo pruebas
 GO
 
 -- Obra
@@ -289,7 +289,7 @@ As
 	WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 		AND FACTURASNUMERO = 0
 		and (select sum(CANTIDAD - CANTIDADDEVUELTA) from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = NUMERO) <> 0
-		and 0=1
+		and 0 = 1 -- Solo pruebas
 GO
 
 -- Pago
@@ -352,7 +352,7 @@ As
 		inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas_pruebas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
 	where T0.IDREQUISICION > 8492
 		and T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
-		and 0 = 1
+		and 0 = 1 -- Solo pruebas
 GO
 
 -- todo: RequisicionPorTimbrar
@@ -375,7 +375,7 @@ As
 		and IDRECEPCIONMERCANCIA > 36081
 		and IDRECEPCIONMERCANCIA not in (40384, 40639)
 		and Tipo NOT IN ('Consignación')
-		and 0 = 1
+		and 0 = 1 -- Solo pruebas
 GO
 
 /* -- Tests
