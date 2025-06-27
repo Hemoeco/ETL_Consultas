@@ -48,7 +48,7 @@ MovConFacStd as (
 		T1.PORCENTAJEIVA AS cPorcentajeImpuesto1,
 		0 as cPorcentajeRetencion1,
 		0 as cPorcentajeRetencion2,
-		dbo.fn_ObtenerCodigoAlmacen(T1.IDSUCURSAL, T0.IDEQUIPONUEVO, T0.IDEQUIPOUSADO, T0.IDREFACCION, MTIPO, T0.DELAL) AS cCodigoAlmacen,
+		dbo.fn_ObtenerCodigoAlmacen(T0.IDSUCURSAL, T0.IDEQUIPONUEVO, T0.IDEQUIPOUSADO, T0.IDREFACCION, MTIPO, T0.DELAL) AS cCodigoAlmacen,
 		rtrim(T0.DELAL) AS cReferencia,
 		dbo.fn_AdaptarDescripcionObservacion(T0.MTIPO, T0.DESCRIPCION, ccf.codigoProducto, prod.cNombreProducto)
 		+ CASE WHEN isnull(T5.ADUANA,isnull(T2.ADUANA, '')) <> '' THEN ', Aduana: ' + rtrim(isnull(T5.ADUANA,isnull(T2.ADUANA,''))) + ', Pedimento Importacion: ' + rtrim(isnull(T5.PEDIMENTOIMPORTACION,isnull(T2.PEDIMENTOIMPORTACION,''))) 
@@ -99,7 +99,7 @@ MovConFacPers as (
 			f.PORCENTAJEIVA AS cPorcentajeImpuesto1,
 			0 as cPorcentajeRetencion1,
 			0 as cPorcentajeRetencion2,
-			dbo.fn_ObtenerCodigoAlmacen(con.IDSUCURSAL, con.IDEQUIPONUEVO, con.IDEQUIPOUSADO, con.IDREFACCION, con.MTIPO, con.DELAL) AS cCodigoAlmacen,
+			dbo.fn_ObtenerCodigoAlmacen(f.IDSUCURSAL, con.IDEQUIPONUEVO, con.IDEQUIPOUSADO, con.IDREFACCION, con.MTIPO, con.DELAL) AS cCodigoAlmacen,
 			rtrim(pers.DelAl) AS cReferencia,
 			dbo.fn_AdaptarDescripcionObservacion(con.MTIPO, pers.Descripcion, ccf.codigoProducto, prod.cNombreProducto) AS cObservaMov,
 			pers.DelAl AS cTextoExtra1,
