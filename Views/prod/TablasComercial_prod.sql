@@ -7,52 +7,36 @@
 -- use ETL_Prod_Cesar
 GO
 
-Create or alter view [Comercial].[Almacen]
-As
-    SELECT *
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admAlmacenes
+if (Object_id('[Comercial].[Almacen]') is null)
+    Create Synonym [Comercial].[Almacen] for adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admAlmacenes
 GO
 
-Create or alter view [Comercial].[Comprobante]
-As
-    SELECT *
-    FROM [document_273d0425-9e06-4275-a043-21fe8d6f23e4_metadata].dbo.Comprobante
+if (Object_id('[Comercial].[Comprobante]') is null)
+    Create Synonym [Comercial].[Comprobante] for [document_273d0425-9e06-4275-a043-21fe8d6f23e4_metadata].dbo.Comprobante
 GO
 
-Create or alter view [Comercial].[Concepto]
-As
-    SELECT *
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admConceptos
+if (Object_id('[Comercial].[Concepto]') is null)
+    Create Synonym [Comercial].[Concepto] for adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admConceptos
 GO
 
-Create or alter view [Comercial].[Documento]
-As
-    SELECT *
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos
+if (Object_id('[Comercial].[Documento]') is null)
+    Create Synonym [Comercial].[Documento] for adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admDocumentos
 GO
 
-Create or alter view [Comercial].[Parametro]
-As
-    SELECT CIDEMPRESA, CRUTACONTPAQ
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admParametros
+if (Object_id('[Comercial].[Parametro]') is null)
+    Create Synonym [Comercial].[Parametro] for adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admParametros
 GO
 
-Create or alter view [Comercial].[Producto]
-As
-    SELECT *
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admProductos
+if (Object_id('[Comercial].[Producto]') is null)
+    Create Synonym [Comercial].[Producto] for adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admProductos
 GO
 
-Create or alter view [Comercial].[UnidadMedida]
-As
-    SELECT *
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admUnidadesMedidaPeso
+if (Object_id('[Comercial].[UnidadMedida]') is null)
+    Create Synonym [Comercial].[UnidadMedida] for adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admUnidadesMedidaPeso
 GO
 
-Create or alter view [Comercial].[TipoCambio]
-As
-    SELECT *
-    FROM ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio
+if (Object_id('[Comercial].[TipoCambio]') is null)
+    Create Synonym [Comercial].[TipoCambio] for ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio
 GO
 
 Create or alter view [Comercial].[ProductoYUnidad]
@@ -61,8 +45,8 @@ As
         CNOMBREPRODUCTO, 
         p.CCLAVESAT as claveProdServSAT, 
         CCLAVEINT as claveUnidadSAT
-	FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admProductos AS p
-		JOIN adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admUnidadesMedidaPeso AS adu ON adu.CIDUNIDAD = p.CIDUNIDADBASE
+	FROM Comercial.Producto AS p
+		JOIN Comercial.UnidadMedida AS adu ON adu.CIDUNIDAD = p.CIDUNIDADBASE
 GO
 
 /* -- Tests
