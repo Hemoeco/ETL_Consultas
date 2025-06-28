@@ -17,7 +17,7 @@ RETURN
     -- Se crea como función dentro de la carpeta 'wrapers' para utilizar la
     -- tabla directa (servidor.bd.schema.tabla) y no la vista (schema.vista = Comercial.Producto)
     SELECT 1 as Existe
-    FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admProductos AS p 
+    FROM Comercial.Producto AS p 
     WHERE p.cCodigoProducto = @CodigoProducto 
         AND p.cTipoProducto = @TipoProducto 
         AND p.cNombreProducto = @NombreProducto 
@@ -45,7 +45,7 @@ GO
 
 --     IF EXISTS (
 --         SELECT 1 
---         FROM adHEMOECO_RENTA_SA_DE_CV_2018.dbo.admProductos AS p 
+--         FROM serverContabilidad.adhemoeco_prueba.dbo.admProductos AS p 
 --         WHERE p.cCodigoProducto = @CodigoProducto 
 --             AND p.cTipoProducto = @TipoProducto 
 --             AND p.cNombreProducto = @NombreProducto 

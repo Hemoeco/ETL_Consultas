@@ -39,16 +39,6 @@ if (Object_id('[Comercial].[TipoCambio]') is null)
     Create Synonym [Comercial].[TipoCambio] for ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio
 GO
 
-Create or alter view [Comercial].[ProductoYUnidad]
-As
-    SELECT CCODIGOPRODUCTO, 
-        CNOMBREPRODUCTO, 
-        p.CCLAVESAT as claveProdServSAT, 
-        CCLAVEINT as claveUnidadSAT
-	FROM Comercial.Producto AS p
-		JOIN Comercial.UnidadMedida AS adu ON adu.CIDUNIDAD = p.CIDUNIDADBASE
-GO
-
 /* -- Tests
 Select top 10 * from Comercial.Almacen
 Select top 10 * from Comercial.Comprobante

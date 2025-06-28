@@ -28,8 +28,8 @@ $Env:sqlcmdServer="192.168.111.13\COMPAC" # servidor de produccion
 # correr ETL_Users.sql para crear un usuario de pruebas con permisos para correr todos estos scripts.
 # $Env:sqlcmdDbName="etlHemoeco" # Prod!
 # $Env:sqlcmdDbName="etlPruebas" # pruebas
-$Env:sqlcmdDbName="ETL_Prod_Cesar"
-# $Env:sqlcmdDbName="ETL_Pruebas_Cesar"
+# $Env:sqlcmdDbName="ETL_Prod_Cesar"
+$Env:sqlcmdDbName="ETL_Pruebas_Cesar"
 
 # copiar usuario y contraseña de la variable de entorno
 $env:sqlcmdUser = $env:ETLUsuario
@@ -83,12 +83,13 @@ try {
     ./RunSqlScript.ps1 ../Views/$configuracion/TablasScore_$configuracion.sql
     
     #funciones dependientes de las tablas
-    ./RunSqlScript.ps1 ../Functions/$configuracion/fn_ExisteProducto_$configuracion.sql
+    ./RunSqlScript.ps1 ../Functions/Dependent/fn_ExisteProducto.sql
     # ./RunSqlScript.ps1 ../Functions/$configuracion/fn_GetIdConFacOriginalUnico_$configuracion.sql utilizar 'IdConFacOriginalUnico' en lugar de esta funcion
     
     ./RunSqlScript.ps1 ../Views/Documentos.sql
     ./RunSqlScript.ps1 ../Views/Movimientos.sql
     ./RunSqlScript.ps1 ../Views/Productos.sql
+    ./RunSqlScript.ps1 ../Views/ProductoYUnidad.sql
     
     #dependiente de Views/FechaIncluirAPartirDe.sql
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_IncluirAPartirDe.sql

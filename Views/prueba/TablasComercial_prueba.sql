@@ -7,62 +7,36 @@
 -- use ETL_Pruebas_Cesar
 GO
 
-Create or alter view [Comercial].[Almacen]
-As
-    SELECT *
-    FROM serverContabilidad.adhemoeco_prueba.dbo.admAlmacenes
+if (Object_id('[Comercial].[Almacen]') is null)
+    Create Synonym [Comercial].[Almacen] for serverContabilidad.adhemoeco_prueba.dbo.admAlmacenes
 GO
 
-Create or alter view [Comercial].[Comprobante]
-As
-    SELECT *
-    FROM serverContabilidad.[document_273d0425-9e06-4275-a043-21fe8d6f23e4_metadata].dbo.Comprobante
+if (Object_id('[Comercial].[Comprobante]') is null)
+    Create Synonym [Comercial].[Comprobante] for [document_273d0425-9e06-4275-a043-21fe8d6f23e4_metadata].dbo.Comprobante
 GO
 
-Create or alter view [Comercial].[Concepto]
-As
-    SELECT *
-    FROM serverContabilidad.adhemoeco_prueba.dbo.admConceptos
+if (Object_id('[Comercial].[Concepto]') is null)
+    Create Synonym [Comercial].[Concepto] for serverContabilidad.adhemoeco_prueba.dbo.admConceptos
 GO
 
-Create or alter view [Comercial].[Documento]
-As
-    SELECT *
-    FROM serverContabilidad.adhemoeco_prueba.dbo.admDocumentos
+if (Object_id('[Comercial].[Documento]') is null)
+    Create Synonym [Comercial].[Documento] for serverContabilidad.adhemoeco_prueba.dbo.admDocumentos
 GO
 
-Create or alter view [Comercial].[Parametro]
-As
-    SELECT CIDEMPRESA, CRUTACONTPAQ
-    FROM serverContabilidad.adhemoeco_prueba.dbo.admParametros
+if (Object_id('[Comercial].[Parametro]') is null)
+    Create Synonym [Comercial].[Parametro] for serverContabilidad.adhemoeco_prueba.dbo.admParametros
 GO
 
-Create or alter view [Comercial].[Producto]
-As
-    SELECT *
-    FROM serverContabilidad.adhemoeco_prueba.dbo.admProductos
+if (Object_id('[Comercial].[Producto]') is null)
+    Create Synonym [Comercial].[Producto] for serverContabilidad.adhemoeco_prueba.dbo.admProductos
 GO
 
-Create or alter view [Comercial].[UnidadMedida]
-As
-    SELECT *
-    FROM serverContabilidad.adhemoeco_prueba.dbo.admUnidadesMedidaPeso
+if (Object_id('[Comercial].[UnidadMedida]') is null)
+    Create Synonym [Comercial].[UnidadMedida] for serverContabilidad.adhemoeco_prueba.dbo.admUnidadesMedidaPeso
 GO
 
-Create or alter view [Comercial].[TipoCambio]
-As
-    SELECT *
-    FROM serverContabilidad.ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio
-GO
-
-Create or alter view [Comercial].[ProductoYUnidad]
-As
-    SELECT CCODIGOPRODUCTO, 
-        CNOMBREPRODUCTO, 
-        p.CCLAVESAT as claveProdServSAT, 
-        CCLAVEINT as claveUnidadSAT
-	FROM serverContabilidad.adhemoeco_prueba.dbo.admProductos AS p
-		JOIN serverContabilidad.adhemoeco_prueba.dbo.admUnidadesMedidaPeso AS adu ON adu.CIDUNIDAD = p.CIDUNIDADBASE
+if (Object_id('[Comercial].[TipoCambio]') is null)
+    Create Synonym [Comercial].[TipoCambio] for ctHemoeco_Renta_SA_de_CV_2016.dbo.TiposCambio
 GO
 
 /* -- Tests

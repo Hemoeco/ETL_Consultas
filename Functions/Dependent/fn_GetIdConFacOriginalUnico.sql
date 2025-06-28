@@ -35,8 +35,8 @@ CREATE OR ALTER FUNCTION dbo.fn_GetIdConFacOriginalUnico(@IdOperConFacPers UNIQU
                 o.IMPORTE,
                 -- Evaluamos si el concepto es de tipo renta (1 = sí, 0 = no)
                 EsRenta = dbo.fn_EsConceptoRenta(o.MTIPO)
-            FROM serverScore.IT_Rentas.dbo.rlnOperConFac_OperConFacPers r
-            INNER JOIN serverScore.IT_Rentas.dbo.OperConFac o ON r.IDCONFAC = o.IDCONFAC
+            FROM Score.rlnConFac_ConFacPers r
+            INNER JOIN Score.ConFac o ON r.IDCONFAC = o.IDCONFAC
             WHERE r.IDCONFACPERS = @IdOperConFacPers
         )
         -- Seleccionamos el concepto correcto según las siguientes prioridades:
@@ -69,10 +69,12 @@ SELECT
     cp.FacturasNumero, 
     cp.Descripcion, 
     cf.IDCONFAC, 
+    ResultadoFuncion = dbo.fn_GetIdConFacOriginalUnico(cp.ID),
+    cp.IdConFacOriginal,
     cf.MTIPO,
-    ResultadoFuncion = dbo.fn_GetIdConFacOriginalUnico(cp.ID)
-FROM OperConFacPers AS cp
-JOIN OperConFac AS cf ON cf.IDCONFAC = dbo.fn_GetIdConFacOriginalUnico(cp.ID);
+    cp.Id
+FROM Score.ConFacPersPorTimbrar AS cp
+JOIN Score.ConFac AS cf ON cf.IDCONFAC = dbo.fn_GetIdConFacOriginalUnico(cp.ID);
 */
 -- print dbo.fn_GetIdConFacOriginalUnico('03fdf62a-346a-4f33-b2b3-2ac88dc2623d')
 
