@@ -12,7 +12,9 @@ AS
 Begin
     -- Fecha de corte para la consulta de documentos
     -- considerar los movimientos a partir de los últimos 90 días
-    RETURN dbo.fn_FechaIT(getdate()) - 90;
+    Declare @FechaCorte int;
+    select top 1 @FechaCorte = FechaCorte from FechaIIncluirAPartirDe;
+    RETURN @FechaCorte
 End
 
 GO

@@ -443,3 +443,5 @@ GO
 -- -- Select top 10 * from Documentos
 -- -- Select top 10 * from Documentos where cIdDocumento like 'FAC%'
 -- -- SELECT TOP(10) * FROM admProductos WHERE cCodigoProducto LIKE 'mod%'
+-- -- Select top 10 * from Documentos where cIdDocumento like 'REC%'
+-- --   Select top 10 * from Movimientos where cIdDocumento like 'REC%'

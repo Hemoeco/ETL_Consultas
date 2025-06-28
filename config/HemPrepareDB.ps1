@@ -27,7 +27,8 @@ $Env:sqlcmdServer="192.168.111.13\COMPAC" # servidor de produccion
 # después correr el script ConfigDB.sql para crear los servidores relacionados. Opcionalmente, puede
 # correr ETL_Users.sql para crear un usuario de pruebas con permisos para correr todos estos scripts.
 # $Env:sqlcmdDbName="etlHemoeco" # Prod!
-$Env:sqlcmdDbName="etlPruebas"
+# $Env:sqlcmdDbName="etlPruebas" # pruebas
+$Env:sqlcmdDbName="ETL_Pruebas_Cesar"
 
 # copiar usuario y contraseña de la variable de entorno
 $env:sqlcmdUser = $env:ETLUsuario
@@ -63,44 +64,47 @@ try {
     ./RunSqlScript.ps1 ../Functions/fn_CrearCodigoProdPers.sql
     ./RunSqlScript.ps1 ../Functions/fn_FechaIT.sql
     ./RunSqlScript.ps1 ../Functions/fn_FechaITaETL.sql
-    ./RunSqlScript.ps1 ../Functions/fn_IncluirAPartirDe.sql
     ./RunSqlScript.ps1 ../Functions/fn_ObtenerCodigoAlmacen.sql
     ./RunSqlScript.ps1 ../Functions/fn_ObtenerCodigoProducto.sql
     ./RunSqlScript.ps1 ../Functions/fn_PrimerPalabra.sql
     ./RunSqlScript.ps1 ../Functions/fn_split_string_to_column.sql
     ./RunSqlScript.ps1 ../Functions/fn_StdCentOper.sql
-
+    
     #funcion dependiente de la tabla Debug (se crea en ConfigDB.sql, que a su vez se corre manualmente) 
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_HemoecoDebug.sql
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_NombreUnidadBase.sql
-
+    
     #tablas base
     ./RunSqlScript.ps1 ../Views/$configuracion/TablasComercial.sql
     ./RunSqlScript.ps1 ../Views/$configuracion/TablasScore.sql
-
+    
     #funciones dependientes de las tablas
     ./RunSqlScript.ps1 ../Functions/$configuracion/fn_ExisteProducto.sql
     # ./RunSqlScript.ps1 ../Functions/$configuracion/fn_GetIdConFacOriginalUnico.sql utilizar 'IdConFacOriginalUnico' en lugar de esta funcion
-
+    
+    ./RunSqlScript.ps1 ../Views/FechaIncluirAPartirDe.sql
     ./RunSqlScript.ps1 ../Views/Documentos.sql
     ./RunSqlScript.ps1 ../Views/Movimientos.sql
     ./RunSqlScript.ps1 ../Views/Productos.sql
+    
+    #dependiente de Views/FechaIncluirAPartirDe.sql
+    ./RunSqlScript.ps1 ../Functions/Dependent/fn_IncluirAPartirDe.sql
 
     # # Obtener lista de archivos .sql
     # $sqlFiles = Get-ChildItem -Path $scriptFolder -Filter *.sql
-
+    
     # # Ejecutar cada script solo si contiene la palabra clave
     # foreach ($file in $sqlFiles) {
-    #     $filePath = $file.FullName
-    #     $fileContent = Get-Content -Path $filePath -Raw
-
-    #     if ($fileContent -match $keyword) {
-    #         Write-Host "Ejecutando $filePath..."
-
-    #         $sqlCmd = "sqlcmd -S $serverInstance -d $database -U tu_usuario -P $env:sqlcmdPassword -i `"$filePath`""
-    #         Invoke-Expression $sqlCmd
-
-    #         Write-Host "Finalizado: $filePath"
+        #     $filePath = $file.FullName
+        #     $fileContent = Get-Content -Path $filePath -Raw
+        
+        #     if ($fileContent -match $keyword) {
+            #         Write-Host "Ejecutando $filePath..."
+            
+            #         $sqlCmd = "sqlcmd -S $serverInstance -d $database -U tu_usuario -P $env:sqlcmdPassword -i `"$filePath`""
+            #         Invoke-Expression $sqlCmd
+            
+            #         Write-Host "Finalizado: $filePath"
     #     } else {
     #         Write-Host "Omitido: $filePath (No contiene '$keyword')"
     #     }

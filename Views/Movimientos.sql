@@ -152,7 +152,12 @@ AlmacenConReq as (
 				else 'TRAN'
 			end as CodigoAlmacen
 	from Score.ConReq
+),
+FechaHoyIT as (
+	-- calcular fecha IT hoy uan vez
+	select dbo.fn_FechaIT(getdate()) as Hoy
 )
+
 -- Movimientos/Conceptos de Factura
 SELECT * FROM MovConFac
 UNION ALL
@@ -275,9 +280,11 @@ from Score.OTRefaccion T0
 	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 	inner join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 	join Score.OTPorTimbrar as OT on OT.NUMERO = T0.ORDENESTRABAJONUMERO
+	cross join FechaIncluirAPartirDe as F
+	cross join FechaHoyIT as H
 where T0.CANTIDAD - T0.CANTIDADDEVUELTA <> 0
 	-- todo: Right filter?
-	and OT.FECHATERMINADO between dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
+	and OT.FECHATERMINADO between F.FechaCorte and H.Hoy
 union all
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 --	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,

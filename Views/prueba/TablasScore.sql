@@ -83,7 +83,8 @@ As
 	Select OD.*,
 		dbo.fn_FechaITaETL(OD.FECHA) AS FechaStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperDepositos as OD
-	where OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
+		cross join FechaIncluirAPartirDe as F
+	where OD.FECHA >= F.FechaCorte
 		and OD.TIMBRAR='S'
 		and OD.IDDEPOSITO > 405000 -- Solo pruebas
 GO
@@ -113,9 +114,10 @@ As
 	SELECT T0.*,
 		CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS FechaAltaSucursalStr
 	FROM serverScore.IT_Rentas_pruebas.dbo.CataEquiposRenta as T0
+		cross join FechaIncluirAPartirDe as F
 	WHERE T0.PROPIETARIO = 'Hemoeco' 
-		AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
-		and 0 = 1 -- Solo pruebas
+		AND T0.FECHAALTAHEMOECO >= F.FechaCorte
+		-- and 0 = 1 -- Solo pruebas
 GO
 
 Create or alter view [Score].[EquipoUsado]
@@ -175,12 +177,13 @@ As
 		CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos
 	-- FROM Score.Factura -- llamar a la tabla remota directamente es ligeramente má eficiente
 	FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
+		cross join FechaIncluirAPartirDe as F
 	WHERE TOTAL <> 0
 		AND CANCELADA = 'N'
 		AND FOLIO2 = ''
 		AND PROCESADA = 'N'
 		--  AND ISNULL(T4.FORMADEPAGO,'')<>''
-		AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
+		AND FECHA >= F.FechaCorte
 		--  AND (datediff(dd, dbo.Fecha(FECHA), GETDATE()) BETWEEN 1 AND 20 OR (datediff(dd, dbo.Fecha(FECHA), GETDATE()) = 0 AND PROCESADA = 'N')) -- Condicion para que Timbre Facturas al final del dia Sin Checkbox Timbrar
 	-- -- En la primer prueba las sig. facturas mostraban descr. null porque no existe el producto en Comercial.
 	-- Where IDFACTURA in (466140,466141,460101,451204,449199,445635,424797,428267,428268,428489,428490,402271,404898,409615,412969,414075)
@@ -252,11 +255,12 @@ As
 	SELECT *,
 		dbo.fn_FechaITaETL(FECHA) as FechaStr
 		FROM serverScore.IT_Rentas_pruebas.dbo.OperNotasCredito
+			cross join FechaIncluirAPartirDe as F
 		WHERE TOTAL <> 0
-			AND FECHA >= dbo.fn_FechaIncluirAPartirDe()
+			AND FECHA >= F.FechaCorte
 			AND IDNOTASCREDITO not in (32977)
 			AND CERRADO = 'S'
-			AND 0 = 1 -- Solo pruebas
+			-- AND 0 = 1 -- Solo pruebas
 GO
 
 -- Obra
@@ -283,13 +287,19 @@ GO
 -- Orden de trabajo por timbrar (OTPorTimbrar)
 Create or alter view [Score].[OTPorTimbrar]
 As
+	with FechaHoyIT as (
+		-- calcular fecha IT hoy uan vez
+		select dbo.fn_FechaIT(getdate()) as Hoy
+	)
 	Select *,
 	dbo.fn_FechaITaETL(FECHATERMINADO) AS FechaTerminadoStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperOrdenesTrabajo
-	WHERE FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
+		cross join FechaIncluirAPartirDe as F
+		cross join FechaHoyIT as H
+	WHERE FECHATERMINADO BETWEEN F.FechaCorte and H.Hoy
 		AND FACTURASNUMERO = 0
 		and (select sum(CANTIDAD - CANTIDADDEVUELTA) from serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones where ORDENESTRABAJONUMERO = NUMERO) <> 0
-		and 0 = 1 -- Solo pruebas
+		-- and 0 = 1 -- Solo pruebas
 GO
 
 -- Pago
@@ -349,10 +359,11 @@ As
 	Select T0.*,
 		CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS FechaRecibidaStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperRequisiciones as T0
+		cross join FechaIncluirAPartirDe as F
 		inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas_pruebas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
 	where T0.IDREQUISICION > 8492
-		and T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
-		and 0 = 1 -- Solo pruebas
+		and T4.FECHARECIBIDA >= F.FechaCorte
+		-- and 0 = 1 -- Solo pruebas
 GO
 
 -- todo: RequisicionPorTimbrar
@@ -369,13 +380,14 @@ As
 	Select *,
 	dbo.fn_FechaITaETL(FECHADOCUMENTO) as FechaDocumentoStr
 	from serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
-	where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
+		cross join FechaIncluirAPartirDe as F
+	where FECHARECEPCION >= F.FechaCorte
 		AND Cerrada = 1
 		AND Estado = 'Contabilizada'
 		and IDRECEPCIONMERCANCIA > 36081
 		and IDRECEPCIONMERCANCIA not in (40384, 40639)
 		and Tipo NOT IN ('Consignación')
-		and 0 = 1 -- Solo pruebas
+		-- and 0 = 1 -- Solo pruebas
 GO
 
 /* -- Tests
