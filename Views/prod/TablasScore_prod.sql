@@ -83,7 +83,7 @@ As
 	Select OD.*,
 		dbo.fn_FechaITaETL(OD.FECHA) AS FechaStr
 	from serverScore.IT_Rentas.dbo.OperDepositos as OD
-		cross join FechaIIncluirAPartirDe as F
+		cross join FechaIncluirAPartirDe as F
 	where OD.FECHA >= F.FechaCorte
 		and OD.TIMBRAR='S'
 		-- and OD.IDDEPOSITO > 405000 -- Solo pruebas
@@ -114,7 +114,7 @@ As
 	SELECT T0.*,
 		CONVERT(VARCHAR(10), dbo.fecha(T0.FECHAALTASUCURSAL), 101) AS FechaAltaSucursalStr
 	FROM serverScore.IT_Rentas.dbo.CataEquiposRenta as T0
-		cross join FechaIIncluirAPartirDe as F
+		cross join FechaIncluirAPartirDe as F
 	WHERE T0.PROPIETARIO = 'Hemoeco' 
 		AND T0.FECHAALTAHEMOECO >= F.FechaCorte
 GO
@@ -176,7 +176,7 @@ As
 		CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos
 	-- FROM Score.Factura -- llamar a la tabla remota directamente es ligeramente má eficiente
 	FROM serverScore.IT_Rentas.dbo.OperFacturas
-		cross join FechaIIncluirAPartirDe as F
+		cross join FechaIncluirAPartirDe as F
 	WHERE TOTAL <> 0
 		AND CANCELADA = 'N'
 		AND FOLIO2 = ''
@@ -254,7 +254,7 @@ As
 	SELECT *,
 		dbo.fn_FechaITaETL(FECHA) as FechaStr
 		FROM serverScore.IT_Rentas.dbo.OperNotasCredito
-			cross join FechaIIncluirAPartirDe as F
+			cross join FechaIncluirAPartirDe as F
 		WHERE TOTAL <> 0
 			AND FECHA >= F.FechaCorte
 			AND IDNOTASCREDITO not in (32977)
@@ -292,7 +292,7 @@ As
 	Select *,
 	dbo.fn_FechaITaETL(FECHATERMINADO) AS FechaTerminadoStr
 	from serverScore.IT_Rentas.dbo.OperOrdenesTrabajo
-		cross join FechaIIncluirAPartirDe as F
+		cross join FechaIncluirAPartirDe as F
 		cross join FechaHoyIT as H
 	WHERE FECHATERMINADO BETWEEN F.FechaCorte and H.Hoy
 		AND FACTURASNUMERO = 0
@@ -356,7 +356,7 @@ As
 	Select T0.*,
 		CONVERT(VARCHAR(10), dbo.fecha(T4.FECHARECIBIDA), 101) AS FechaRecibidaStr
 	from serverScore.IT_Rentas.dbo.OperRequisiciones as T0
-		cross join FechaIIncluirAPartirDe as F
+		cross join FechaIncluirAPartirDe as F
 		inner join (select IDREQUISICION, FECHARECIBIDA from serverScore.IT_Rentas.dbo.OperConReq group by IDREQUISICION, FECHARECIBIDA) T4 on T0.IDREQUISICION = T4.IDREQUISICION
 	where T0.IDREQUISICION > 8492
 		and T4.FECHARECIBIDA >= F.FechaCorte
@@ -376,7 +376,7 @@ As
 	Select *,
 	dbo.fn_FechaITaETL(FECHADOCUMENTO) as FechaDocumentoStr
 	from serverScore.IT_Rentas.dbo.OperRecepcionMercancia
-		cross join FechaIIncluirAPartirDe as F
+		cross join FechaIncluirAPartirDe as F
 	where FECHARECEPCION >= F.FechaCorte
 		AND Cerrada = 1
 		AND Estado = 'Contabilizada'

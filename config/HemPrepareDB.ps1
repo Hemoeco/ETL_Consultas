@@ -28,7 +28,8 @@ $Env:sqlcmdServer="192.168.111.13\COMPAC" # servidor de produccion
 # correr ETL_Users.sql para crear un usuario de pruebas con permisos para correr todos estos scripts.
 # $Env:sqlcmdDbName="etlHemoeco" # Prod!
 # $Env:sqlcmdDbName="etlPruebas" # pruebas
-$Env:sqlcmdDbName="ETL_Pruebas_Cesar"
+$Env:sqlcmdDbName="ETL_Prod_Cesar"
+# $Env:sqlcmdDbName="ETL_Pruebas_Cesar"
 
 # copiar usuario y contraseña de la variable de entorno
 $env:sqlcmdUser = $env:ETLUsuario
@@ -73,16 +74,18 @@ try {
     #funcion dependiente de la tabla Debug (se crea en ConfigDB.sql, que a su vez se corre manualmente) 
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_HemoecoDebug.sql
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_NombreUnidadBase.sql
-    
+
+    # requerida por TablasScore
+    ./RunSqlScript.ps1 ../Views/FechaIncluirAPartirDe.sql
+
     #tablas base
-    ./RunSqlScript.ps1 ../Views/$configuracion/TablasComercial.sql
-    ./RunSqlScript.ps1 ../Views/$configuracion/TablasScore.sql
+    ./RunSqlScript.ps1 ../Views/$configuracion/TablasComercial_$configuracion.sql
+    ./RunSqlScript.ps1 ../Views/$configuracion/TablasScore_$configuracion.sql
     
     #funciones dependientes de las tablas
-    ./RunSqlScript.ps1 ../Functions/$configuracion/fn_ExisteProducto.sql
-    # ./RunSqlScript.ps1 ../Functions/$configuracion/fn_GetIdConFacOriginalUnico.sql utilizar 'IdConFacOriginalUnico' en lugar de esta funcion
+    ./RunSqlScript.ps1 ../Functions/$configuracion/fn_ExisteProducto_$configuracion.sql
+    # ./RunSqlScript.ps1 ../Functions/$configuracion/fn_GetIdConFacOriginalUnico_$configuracion.sql utilizar 'IdConFacOriginalUnico' en lugar de esta funcion
     
-    ./RunSqlScript.ps1 ../Views/FechaIncluirAPartirDe.sql
     ./RunSqlScript.ps1 ../Views/Documentos.sql
     ./RunSqlScript.ps1 ../Views/Movimientos.sql
     ./RunSqlScript.ps1 ../Views/Productos.sql
