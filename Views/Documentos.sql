@@ -113,9 +113,11 @@ FROM Score.NotaDeCreditoPorTimbrar T0
 				having count(distinct S0.TIPO) = 1) as T6 on T6.IDNOTASCREDITO = T0.IDNOTASCREDITO
 	INNER JOIN Comercial.Concepto T4 ON T4.CCODIGOCONCEPTO = 'NC' + case when left(T6.TIPO,8)='Devoluci' then 'V' else 'F' end  + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(T0.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END + '40'
 	LEFT JOIN Score.Obra T3 ON T3.IDCLIENTE = T2.CLIENTESNUMERO AND T3.NUMERO = T2.OBRASNUMERO
-	LEFT JOIN Comercial.Documento T5 ON T5.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDNOTASCREDITO) AND T5.CIDCONCEPTODOCUMENTO = T4.CIDCONCEPTODOCUMENTO AND T5.cCancelado = 0
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHA)
-WHERE T5.CIDDOCUMENTO IS NULL
+WHERE not exists (select 1 from Comercial.Documento T5 
+					Where T5.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDNOTASCREDITO) 
+					AND T5.CIDCONCEPTODOCUMENTO = T4.CIDCONCEPTODOCUMENTO 
+					AND T5.cCancelado = 0)
 	-- condiciones incluidas en 'Score.NotaDeCreditoPorTimbrar', por eficiencia
 	-- AND T0.TOTAL <> 0
 	-- AND T0.IDNOTASCREDITO not in ('32977')
@@ -207,10 +209,9 @@ FROM Score.RMPorTimbrar T0
 	INNER JOIN Score.ParaCentOper T5 ON T0.IDCENTROOPERATIVO = T5.IDCENTROOPERATIVO
 	INNER JOIN Comercial.Concepto T3 ON T3.CCODIGOCONCEPTO = 'FACP' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(T0.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END
 	left JOIN (select CIDCONCEPTODOCUMENTO, CFOLIO, count(*) as Num from Comercial.Documento group by CIDCONCEPTODOCUMENTO, CFOLIO) as D on D.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND D.CFOLIO = T0.IDRECEPCIONMERCANCIA
-	LEFT JOIN Comercial.Documento T1 ON T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHADOCUMENTO)
 	LEFT JOIN Comercial.Comprobante T10 on left(T10.TipoComprobante,1)='I' and rtrim(T10.RFCEmisor) = rtrim(T2.RFC) and T10.Serie + T10.Folio = T0.NUMERODOCUMENTO
-WHERE T1.cFolio IS NULL
+WHERE not exists (Select 1 from Comercial.Documento T1 Where T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA)
   -- Filtros incluidos en RMPorTimbrar, para ganar eficiencia
   -- year(dbo.fecha(FECHARECEPCION)) >= 2024
   -- AND T0.Cerrada = 1
@@ -300,8 +301,9 @@ SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 FROM Score.OTPorTimbrar T0
 	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 	inner join Comercial.Concepto T2 on T2.CCODIGOCONCEPTO = 'ODT' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO)
-	LEFT JOIN Comercial.Documento T3 ON T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO AND T3.cFolio = T0.NUMERO -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
-WHERE T3.cFolio IS NULL
+WHERE not exists (select 1 from Comercial.Documento T3 
+					where T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO
+					AND T3.cFolio = T0.NUMERO) -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
 -- Filtros incluidos en OTPorTimbrar
 --   AND T0.FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 --   AND T0.FACTURASNUMERO = 0
@@ -342,8 +344,10 @@ SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 FROM Score.RequisicionPorTimbrar T0
 	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVOORIGEN = T1.IDCENTROOPERATIVO
 	inner join Comercial.Concepto T2 on T2.CCODIGOCONCEPTO = 'REQ' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN)
-	LEFT JOIN Comercial.Documento T3 ON T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) AND T3.cFolio = T0.IDREQUISICION
-WHERE T3.cFolio IS NULL
+WHERE not exists (select 1 from Comercial.Documento T3 
+					where T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO 
+					AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
+					AND T3.cFolio = T0.IDREQUISICION)
   -- Incluidas en RequisicionPorTimbrar
   -- and T0.IDREQUISICION > '8492'
   -- AND T4.FECHARECIBIDA >= dbo.fn_FechaIncluirAPartirDe()
@@ -385,8 +389,8 @@ FROM Score.EquipoRentaDadoDeAlta T0
 	INNER JOIN Score.Linea T2 ON T0.IDLINEA = T2.IDLINEA
 	INNER JOIN Score.ParaCentOper T5 ON T0.IDCENTROOPERATIVO = T5.IDCENTROOPERATIVO
 	INNER JOIN Comercial.Concepto T3 on T3.CIDDOCUMENTODE=2 and T3.CCODIGOCONCEPTO = 'PE' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO)
-	LEFT JOIN Comercial.Documento T4 ON T4.CIDDOCUMENTODE=2 AND T4.CSERIEDOCUMENTO='REN' AND T4.CFOLIO = T0.IDEQUIPO
-WHERE T4.CIDDOCUMENTO is null
+WHERE not exists (Select 1 from Comercial.Documento T4 
+					where T4.CIDDOCUMENTODE=2 AND T4.CSERIEDOCUMENTO='REN' AND T4.CFOLIO = T0.IDEQUIPO)
 -- Incluido en EquipoRentaDadoDeAlta
 --   AND T0.FECHAALTAHEMOECO >= dbo.fn_FechaIncluirAPartirDe()
 --   AND T0.PROPIETARIO = 'Hemoeco'
@@ -428,8 +432,8 @@ FROM Score.DepositoPorTimbrar OD
 	INNER JOIN Score.ClienteSucursal CCS on OP.IDSUCURSAL=CCS.IDSUCURSAL and OP.CLIENTESNUMERO = CCS.IDNUMERO
 	inner join Score.CuentaBanco CCB on CCB.IDCUENTABANCOS = OP.IDCUENTABANCOS
 	INNER JOIN Comercial.Parametro M0 on M0.CIDEMPRESA>0
-	left join Comercial.Documento M8 on M8.CIDDOCUMENTODE=9 and M8.CSERIEDOCUMENTO='P' + rtrim(PCO.INICIALES) and M8.cfolio = OD.IDDEPOSITO
-where M8.CIDDOCUMENTO is null
+where not exists (select 1 from Comercial.Documento M8 
+					where M8.CIDDOCUMENTODE=9 and M8.CSERIEDOCUMENTO='P' + rtrim(PCO.INICIALES) and M8.cfolio = OD.IDDEPOSITO)
 -- Incluido en 
 --  and OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
 --  and OD.TIMBRAR='S'
