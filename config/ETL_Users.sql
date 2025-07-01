@@ -147,3 +147,44 @@ Alter role [db_datareader] Add Member [daniel.hernandez]
 Use [adHEMOECO_RENTA_SA_DE_CV_2018]
 Create user [daniel.hernandez] for login [daniel.hernandez]
 Alter role [db_datareader] Add Member [daniel.hernandez]
+
+
+----- Caleb -----
+Create Login [caleb.aranda] with password = ''
+
+use etlHemoeco
+Create user [caleb.aranda] for login [caleb.aranda]
+go
+Alter role [db_datareader] Add Member [caleb.aranda]
+Alter role [db_datawriter] Add Member [caleb.aranda]
+go
+
+use etlPrueba
+Create user [caleb.aranda] for login [caleb.aranda]
+go
+Alter role [db_datareader] Add Member [caleb.aranda]
+Alter role [db_datawriter] Add Member [caleb.aranda]
+go
+
+Use [adhemoeco_prueba]
+go
+Create user [caleb.aranda] for login [caleb.aranda]
+Alter role [db_datareader] Add Member [caleb.aranda]
+Alter role [db_datawriter] Add Member [caleb.aranda]
+
+Use [ctHemoeco_Renta_SA_de_CV_2016]
+go
+
+Create user [caleb.aranda] for login [caleb.aranda]
+Alter role [db_datareader] Add Member [caleb.aranda]
+Alter role [db_datawriter] Add Member [caleb.aranda]
+
+Use [document_273d0425-9e06-4275-a043-21fe8d6f23e4_metadata]
+Create user [caleb.aranda] for login [caleb.aranda]
+Alter role [db_datareader] Add Member [caleb.aranda]
+Alter role [db_datawriter] Add Member [caleb.aranda]
+
+Use [adHEMOECO_RENTA_SA_DE_CV_2018]
+Create user [caleb.aranda] for login [caleb.aranda]
+Alter role [db_datareader] Add Member [caleb.aranda]
+Alter role [db_datawriter] Add Member [caleb.aranda]
