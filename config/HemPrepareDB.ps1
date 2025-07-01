@@ -61,8 +61,6 @@ try {
     ./RunSqlScript.ps1 ../Functions/fn_AdaptarDescripcionObservacion.sql
     ./RunSqlScript.ps1 ../Functions/fn_CalcularCostoEspecifico.sql
     ./RunSqlScript.ps1 ../Functions/fn_CalcularImporteExtra.sql
-    ./RunSqlScript.ps1 ../Functions/fn_ConsultarCodigoProducto.sql
-    ./RunSqlScript.ps1 ../Functions/fn_CrearCodigoProdPers.sql
     ./RunSqlScript.ps1 ../Functions/fn_FechaIT.sql
     ./RunSqlScript.ps1 ../Functions/fn_FechaITaETL.sql
     ./RunSqlScript.ps1 ../Functions/fn_ObtenerCodigoAlmacen.sql
@@ -74,10 +72,10 @@ try {
     #funcion dependiente de la tabla Debug (se crea en ConfigDB.sql, que a su vez se corre manualmente) 
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_HemoecoDebug.sql
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_NombreUnidadBase.sql
-
+    
     # requerida por TablasScore
     ./RunSqlScript.ps1 ../Views/FechaIncluirAPartirDe.sql
-
+    
     #tablas base
     ./RunSqlScript.ps1 ../Views/$configuracion/TablasComercial_$configuracion.sql
     ./RunSqlScript.ps1 ../Views/$configuracion/TablasScore_$configuracion.sql
@@ -86,10 +84,17 @@ try {
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_ExisteProducto.sql
     # ./RunSqlScript.ps1 ../Functions/$configuracion/fn_GetIdConFacOriginalUnico_$configuracion.sql utilizar 'IdConFacOriginalUnico' en lugar de esta funcion
     
+    # Views dependientes de tablas Score/Comercial
+    ./RunSqlScript.ps1 ../Views/OTPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/ProductoYUnidad.sql
+    
+    #requiere ProductoYUnidad
+    ./RunSqlScript.ps1 ../Functions/fn_ConsultarCodigoProducto.sql
+    ./RunSqlScript.ps1 ../Functions/fn_CrearCodigoProdPers.sql
+
     ./RunSqlScript.ps1 ../Views/Documentos.sql
     ./RunSqlScript.ps1 ../Views/Movimientos.sql
     ./RunSqlScript.ps1 ../Views/Productos.sql
-    ./RunSqlScript.ps1 ../Views/ProductoYUnidad.sql
     
     #dependiente de Views/FechaIncluirAPartirDe.sql
     ./RunSqlScript.ps1 ../Functions/Dependent/fn_IncluirAPartirDe.sql

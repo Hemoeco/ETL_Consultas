@@ -54,14 +54,23 @@ FROM Score.FacturaPorTimbrar T0
 ), -- test Select * from DocFactura
 PagosDeposito as (select OP.DEPOSITOSNUMERO,
 					OP.IDFORMAPAGO, OP.IDSUCURSAL, OP.CLIENTESNUMERO, OP.IDCUENTABANCOS,
-					sum(case when T2.METODODEPAGO='PUE' then 1 else 0 end) as PUE,
-					convert(decimal(10,2), sum(CASE WHEN (LEFT(T2.Moneda, 1) = 'P') THEN 1 ELSE T2.TIPOCAMBIO END * T2.IVA * OFP.IMPORTE/T2.TOTAL)) as IVA
+					Sum(IIf(T2.METODODEPAGO='PUE', 1, 0)) as PUE,
+					Convert(decimal(10,2), Sum((IIf(T2.Moneda like 'P%', 1, T2.TIPOCAMBIO) * T2.IVA * OFP.IMPORTE)/T2.TOTAL)) as IVA
 				from Score.Pago OP
 					inner join Score.FacturaPago OFP on OFP.PAGOSNUMERO = OP.NUMERO
 					inner join Score.Factura T2 on OFP.FACTURASNUMERO = T2.IDFACTURA
 				where T2.TOTAL <> 0
-				group by OP.DEPOSITOSNUMERO, OP.IDFORMAPAGO, OP.IDSUCURSAL, OP.CLIENTESNUMERO, OP.IDCUENTABANCOS)
-
+				group by OP.DEPOSITOSNUMERO, OP.IDFORMAPAGO, OP.IDSUCURSAL, OP.CLIENTESNUMERO, OP.IDCUENTABANCOS),
+PagoCliente AS (
+	-- Claude
+    SELECT DISTINCT 
+        P.DEPOSITOSNUMERO,
+        FIRST_VALUE(P.CLIENTESNUMERO) OVER (
+            PARTITION BY P.DEPOSITOSNUMERO 
+            ORDER BY P.CLIENTESNUMERO
+        ) AS CLIENTESNUMERO
+    FROM Score.Pago P
+)
 -- Facturas
 SELECT * FROM DocFactura
 
@@ -115,8 +124,8 @@ FROM Score.NotaDeCreditoPorTimbrar T0
 	LEFT JOIN Score.Obra T3 ON T3.IDCLIENTE = T2.CLIENTESNUMERO AND T3.NUMERO = T2.OBRASNUMERO
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHA)
 WHERE not exists (select 1 from Comercial.Documento T5 
-					Where T5.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDNOTASCREDITO) 
-					AND T5.CIDCONCEPTODOCUMENTO = T4.CIDCONCEPTODOCUMENTO 
+					Where T5.CIDCONCEPTODOCUMENTO = T4.CIDCONCEPTODOCUMENTO 
+					AND  T5.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDNOTASCREDITO)
 					AND T5.cCancelado = 0)
 	-- condiciones incluidas en 'Score.NotaDeCreditoPorTimbrar', por eficiencia
 	-- AND T0.TOTAL <> 0
@@ -211,7 +220,7 @@ FROM Score.RMPorTimbrar T0
 	left JOIN (select CIDCONCEPTODOCUMENTO, CFOLIO, count(*) as Num from Comercial.Documento group by CIDCONCEPTODOCUMENTO, CFOLIO) as D on D.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND D.CFOLIO = T0.IDRECEPCIONMERCANCIA
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHADOCUMENTO)
 	LEFT JOIN Comercial.Comprobante T10 on left(T10.TipoComprobante,1)='I' and rtrim(T10.RFCEmisor) = rtrim(T2.RFC) and T10.Serie + T10.Folio = T0.NUMERODOCUMENTO
-WHERE not exists (Select 1 from Comercial.Documento T1 Where T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA)
+  -- WHERE not exists (Select 1 from Comercial.Documento T1 Where T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA)
   -- Filtros incluidos en RMPorTimbrar, para ganar eficiencia
   -- year(dbo.fecha(FECHARECEPCION)) >= 2024
   -- AND T0.Cerrada = 1
@@ -271,7 +280,7 @@ SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 	T0.FechaTerminadoStr AS cFecha,
 	T0.FechaTerminadoStr AS cFechaVencimiento,
 	T0.FechaTerminadoStr AS cFechaEntregaRecepcion,
-	rtrim(T2.CCODIGOCONCEPTO) AS cCodigoConcepto,
+	T0.cCodigoConcepto,
 	'20902' AS cCodigoCteProv,
 	rtrim(T1.INICIALES) AS cSerieDocumento,
 	T0.NUMERO AS cFolio,
@@ -300,14 +309,14 @@ SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 	'' as cNumeroGuia
 FROM Score.OTPorTimbrar T0
 	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
-	inner join Comercial.Concepto T2 on T2.CCODIGOCONCEPTO = 'ODT' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO)
-WHERE not exists (select 1 from Comercial.Documento T3 
-					where T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO
-					AND T3.cFolio = T0.NUMERO) -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
--- Filtros incluidos en OTPorTimbrar
+-- Filtros y join incluidos en OTPorTimbrar
+--  join Comercial.Concepto as T2 on T2.CCODIGOCONCEPTO = 'ODT' + dbo.fn_StdCentOper(OT.IDCENTROOPERATIVO)
+--  left join Comercial.Documento as T3 on T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO
+--			AND T3.cFolio = OT.NUMERO -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
 --   AND T0.FECHATERMINADO BETWEEN dbo.fn_FechaIncluirAPartirDe() and dbo.fn_FechaIT(getdate())
 --   AND T0.FACTURASNUMERO = 0
 --   and (select sum(CANTIDAD - CANTIDADDEVUELTA) from Score.OTRefaccion where ORDENESTRABAJONUMERO = T0.NUMERO) <> 0
+--   AND T3.cFolio is null
 UNION ALL
 -- Transpasos y requisiciones
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
@@ -396,26 +405,31 @@ WHERE not exists (Select 1 from Comercial.Documento T4
 --   AND T0.PROPIETARIO = 'Hemoeco'
 UNION ALL
 -- Pagos (Depositos)
-SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,
-	OD.FechaStr AS cFecha,
-	OD.FechaStr AS cFechaVencimiento,
-	OD.FechaStr AS cFechaEntregaRecepcion,
-	'PDC' + dbo.fn_StdCentOper(OD.IDCENTROOPERATIVO) + CASE WHEN LEFT(OD.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END + '40' AS cCodigoConcepto,
-	(select top(1) convert(varchar,CLIENTESNUMERO) from Score.Pago where DEPOSITOSNUMERO = OD.IDDEPOSITO) AS cCodigoCteProv,
-	'P' + rtrim(PCO.INICIALES) AS cSerieDocumento,
-	OD.IDDEPOSITO AS cFolio,
-	CASE WHEN LEFT(OD.Moneda, 1) = 'P' THEN 1 ELSE 2 END AS cIdMoneda,
-	OD.TIPOCAMBIO AS cTipoCambio,
+-- Optimized version with performance improvements (Claude)
+SELECT 
+    Concat('D', OD.IDDEPOSITO) AS cIdDocumento,
+    OD.FechaStr AS cFecha,
+    OD.FechaStr AS cFechaVencimiento,
+    OD.FechaStr AS cFechaEntregaRecepcion,
+    Concat('PDC', dbo.fn_StdCentOper(OD.IDCENTROOPERATIVO), IIf(OD.MONEDA LIKE 'P%', 'N', 'E'), '40') AS cCodigoConcepto,
+
+    convert(varchar, PC.CLIENTESNUMERO) AS cCodigoCteProv,
+	-- (select top(1) convert(varchar,CLIENTESNUMERO) from Score.Pago where DEPOSITOSNUMERO = OD.IDDEPOSITO) AS cCodigoCteProv,
+
+    'P' + rtrim(PCO.INICIALES) AS cSerieDocumento,
+    OD.IDDEPOSITO AS cFolio,
+    IIf(OD.Moneda LIKE 'P%', 1, 2) AS cIdMoneda,
+    OD.TIPOCAMBIO AS cTipoCambio,
 	convert(varchar,OD.IDDEPOSITO) AS cReferen01, 
 	(SELECT value FROM fn_split_string_to_column(CCS.EMAILCOMP, ';') where column_id=1) as cTextoExtra1,
 	(SELECT value FROM fn_split_string_to_column(CCS.EMAILCOMP, ';') where column_id=2) as cTextoExtra2,
 	(SELECT value FROM fn_split_string_to_column(CCS.EMAILCOMP, ';') where column_id=3) as cTextoExtra3,
 	CASE WHEN (LEFT(OD.Moneda, 1) = 'P') THEN 1 ELSE 1/OD.TIPOCAMBIO END * isnull(OP.IVA,0) AS cImporteExtra1,
-	'' AS cObserva01, 
-	'(Ninguno)' AS cCodigoAgente,
-	'' AS cNumCtaPag,
+    '' AS cObserva01,
+    '(Ninguno)' AS cCodigoAgente,
+    '' AS cNumCtaPag,
 	OP.IDFORMAPAGO as cMetodoPag,
-	1 AS cCantParci,
+    1 AS cCantParci,
 	'CP01'/*'P01'*/ as cCodConCba,
 	OD.IMPORTE as cNeto,
 	0 as cPorcentajeImpuesto1,
@@ -425,14 +439,15 @@ SELECT 'D' + CONVERT(varchar, OD.IDDEPOSITO) AS cIdDocumento,
 	rtrim(CCB.CUENTABANCARIA) as cCodigoProyecto,
 	M0.CRUTACONTPAQ as cDestinatario,
 	'' as cNumeroGuia
-FROM Score.DepositoPorTimbrar OD
-	INNER JOIN Score.ParaCentOper PCO ON OD.IDCENTROOPERATIVO = PCO.IDCENTROOPERATIVO
+FROM Score.DepositoPorTimbrar as OD with (nolock)
+	INNER JOIN Score.ParaCentOper PCO with (nolock) ON OD.IDCENTROOPERATIVO = PCO.IDCENTROOPERATIVO
 	-- inner join Score.Pago OP on OP.DEPOSITOSNUMERO= OD.IDDEPOSITO
 	inner join PagosDeposito as OP on OP.DEPOSITOSNUMERO = OD.IDDEPOSITO
-	INNER JOIN Score.ClienteSucursal CCS on OP.IDSUCURSAL=CCS.IDSUCURSAL and OP.CLIENTESNUMERO = CCS.IDNUMERO
-	inner join Score.CuentaBanco CCB on CCB.IDCUENTABANCOS = OP.IDCUENTABANCOS
+	INNER JOIN Score.ClienteSucursal as CCS with (nolock) on OP.IDSUCURSAL=CCS.IDSUCURSAL and OP.CLIENTESNUMERO = CCS.IDNUMERO
+	inner join Score.CuentaBanco as CCB with (nolock) on CCB.IDCUENTABANCOS = OP.IDCUENTABANCOS
 	INNER JOIN Comercial.Parametro M0 on M0.CIDEMPRESA>0
-where not exists (select 1 from Comercial.Documento M8 
+	inner join PagoCliente as PC on OP.DEPOSITOSNUMERO = PC.DEPOSITOSNUMERO
+where not exists (select 1 from Comercial.Documento as M8 with (nolock) 
 					where M8.CIDDOCUMENTODE=9 and M8.CSERIEDOCUMENTO='P' + rtrim(PCO.INICIALES) and M8.cfolio = OD.IDDEPOSITO)
 -- Incluido en 
 --  and OD.FECHA >= dbo.fn_FechaIncluirAPartirDe()
@@ -447,5 +462,6 @@ GO
 -- -- Select top 10 * from Documentos
 -- -- Select top 10 * from Documentos where cIdDocumento like 'FAC%'
 -- -- SELECT TOP(10) * FROM admProductos WHERE cCodigoProducto LIKE 'mod%'
+-- -- Select cIdDocumento from Documentos where cIdDocumento like 'ODT%'
 -- -- Select top 10 * from Documentos where cIdDocumento like 'REC%'
 -- --   Select top 10 * from Movimientos where cIdDocumento like 'REC%'

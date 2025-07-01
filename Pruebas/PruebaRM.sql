@@ -34,3 +34,17 @@ where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
     and IDRECEPCIONMERCANCIA > 36081
     and IDRECEPCIONMERCANCIA not in (40384, 40639)
     and Tipo NOT IN ('Consignación')
+
+
+-- para comparar
+Select * from etlPrueba.dbo.Documentos
+Select * from Documentos
+
+Select * from [Score].[OTPorTimbrar]
+Select * from Documentos where cIdDocumento like 'ODT%'
+
+Select * from etlPrueba.dbo.Documentos where cIdDocumento like 'REC%'
+Select * from Documentos where cIdDocumento like 'REC%'
+
+Select * from etlPrueba.dbo.Movimientos
+Select * from Movimientos

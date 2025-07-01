@@ -232,23 +232,6 @@ if (Object_id('[Score].[OTRefaccion]') is null)
 	Create Synonym [Score].[OTRefaccion] for serverScore.IT_Rentas_pruebas.dbo.OperOTRefacciones
 GO
 
--- Orden de trabajo por timbrar (OTPorTimbrar)
-Create or alter view [Score].[OTPorTimbrar]
-As
-	with FechaHoyIT as (
-		-- calcular fecha IT hoy uan vez
-		select dbo.fn_FechaIT(getdate()) as Hoy
-	)
-	Select *,
-	dbo.fn_FechaITaETL(FECHATERMINADO) AS FechaTerminadoStr
-	from Score.OT
-		join FechaIncluirAPartirDe as F on FECHATERMINADO >= F.FechaCorte
-		join FechaHoyIT as H on FECHATERMINADO <= H.Hoy
-	WHERE FACTURASNUMERO = 0
-		and (select sum(CANTIDAD - CANTIDADDEVUELTA) from Score.OTRefaccion where ORDENESTRABAJONUMERO = NUMERO) <> 0
-		-- and 0 = 1 -- Solo pruebas
-GO
-
 -- Pago
 if (Object_id('[Score].[Pago]') is null)
 	Create Synonym [Score].[Pago] for serverScore.IT_Rentas_pruebas.dbo.OperPagos
@@ -321,20 +304,6 @@ if (Object_id('[Score].[RM]') is null)
 	Create Synonym [Score].[RM] for serverScore.IT_Rentas_pruebas.dbo.OperRecepcionMercancia
 GO
 
-Create or alter view [Score].[RMPorTimbrar]
-As
-	Select *,
-	dbo.fn_FechaITaETL(FECHADOCUMENTO) as FechaDocumentoStr
-	from Score.RM
-		join FechaIncluirAPartirDe as F on FECHARECEPCION >= F.FechaCorte
-	where Cerrada = 1
-		AND Estado = 'Contabilizada'
-		and IDRECEPCIONMERCANCIA > 36081
-		and IDRECEPCIONMERCANCIA not in (40384, 40639)
-		and Tipo NOT IN ('Consignación')
-		-- and 0 = 1 -- Solo pruebas
-GO
-
 if (Object_id('[Score].[rlnConFac_ConFacPers]') is null)
 	Create Synonym [Score].[rlnConFac_ConFacPers] for serverScore.IT_Rentas_pruebas.dbo.rlnOperConFac_OperConFacPers
 
@@ -375,6 +344,14 @@ Select top 10 * from Score.Proveedor
 Select top 10 * from Score.Refaccion
 Select top 10 * from Score.RefaccionConCodSAT
 Select top 10 * from Score.Requisicion
+Select top 10 * from Score.RequisicionPorTimbrar
 Select top 10 * from Score.RM
 Select top 10 * from Score.RMPorTimbrar
+
+Select count(1) as Depositos from Score.DepositoPorTimbrar
+Select count(1) as Facturas from Score.FacturaPorTimbrar
+Select count(1) as NotasDeCredito from Score.NotaDeCreditoPorTimbrar
+Select count(1) as OTs from Score.OTPorTimbrar
+Select count(1) as Requisiciones from Score.RequisicionPorTimbrar
+Select count(1) as RMs from Score.RMPorTimbrar
 */
