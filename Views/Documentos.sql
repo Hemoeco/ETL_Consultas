@@ -181,22 +181,22 @@ WHERE year(dbo.fecha(FECHARECEPCION)) >= 2024
   and T0.IDRECEPCIONMERCANCIA not in (40384, 40639)
 */
 -- Cambio para volver importar RM con mismo ID y Canceladas en Comercial
-SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
-	T0.FechaDocumentoStr AS cFecha,
-	T0.FechaDocumentoStr AS cFechaVencimiento,
-	CONVERT(VARCHAR(10), EOMONTH(dbo.Fecha(T0.FECHADOCUMENTO)), 101) AS cFechaEntregaRecepcion,
-	T0.cCodigoConcepto,
-	'P' + REPLICATE('0', 5 - LEN(T0.IDPROVEEDOR)) + CONVERT(varchar, T0.IDPROVEEDOR) AS cCodigoCteProv,
-	case isnull(D.Num, 0) when 0 then rtrim(T5.INICIALES) else concat(rtrim(T5.INICIALES), D.Num + 1) end AS cSerieDocumento,
-	T0.IDRECEPCIONMERCANCIA AS cFolio,
-	CASE WHEN LEFT(T0.MONEDA, 1) = 'P' THEN 1 ELSE 2 END AS cIdMoneda,
-	isnull(T9.TipoCambio, T0.TIPOCAMBIO)  AS cTipoCambio,
-	CONVERT(varchar, T0.NUMERODOCUMENTO) AS cReferen01,
+SELECT Concat('REC', IDRECEPCIONMERCANCIA) AS cIdDocumento,
+	FechaDocumentoStr AS cFecha,
+	FechaDocumentoStr AS cFechaVencimiento,
+	CONVERT(VARCHAR(10), EOMONTH(dbo.Fecha(FECHADOCUMENTO)), 101) AS cFechaEntregaRecepcion, -- fn_FechaITaETL
+	cCodigoConcepto,
+	Concat('P', REPLICATE('0', 5 - LEN(IDPROVEEDOR)), IDPROVEEDOR) AS cCodigoCteProv,
+	case isnull(Num, 0) when 0 then rtrim(INICIALES) else concat(rtrim(INICIALES), Num + 1) end AS cSerieDocumento,
+	IDRECEPCIONMERCANCIA AS cFolio,
+	CASE WHEN LEFT(MONEDA, 1) = 'P' THEN 1 ELSE 2 END AS cIdMoneda,
+	TipoCambio AS cTipoCambio,
+	CONVERT(varchar, NUMERODOCUMENTO) AS cReferen01,
 	'' AS cTextoEx01,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
-	T0.IDSUCURSAL AS cImporteExtra1,
-	'Recepcion mercancia ' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) + ', proveedor: ' + CONVERT(varchar, T0.IDPROVEEDOR) AS cObservaciones,
+	IDSUCURSAL AS cImporteExtra1,
+	'Recepcion mercancia ' + CONVERT(varchar, IDRECEPCIONMERCANCIA) + ', proveedor: ' + CONVERT(varchar, IDPROVEEDOR) AS cObservaciones,
 	'' AS cCodigoAgente,
 --	'' AS cNumeroG01, 
 	'' AS cNumCtaPag,
@@ -208,27 +208,11 @@ SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	0 as cPorcentajeImpuesto1,
 	0 as cImpuesto1,
 	0 as cImporte,
-	convert(varchar(50),T10.UUID) as cUUID,
+	convert(varchar(50),UUID) as cUUID,
 	'' as cCodigoProyecto,
 	'' as cDestinatario,
 	'' as cNumeroGuia
-FROM Score.RMPorTimbrar T0
-	INNER JOIN Score.Proveedor T2 ON T0.IDPROVEEDOR = T2.IDPROVEEDOR
-	INNER JOIN Score.ParaPreferencias T4 ON T4.IDPREFERENCIAS = 1
-	INNER JOIN Score.ParaCentOper T5 ON T0.IDCENTROOPERATIVO = T5.IDCENTROOPERATIVO
-	-- INNER JOIN Comercial.Concepto T3 ON T3.CCODIGOCONCEPTO = 'FACP' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(T0.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END
-	left JOIN (select CIDCONCEPTODOCUMENTO, CFOLIO, count(*) as Num from Comercial.Documento group by CIDCONCEPTODOCUMENTO, CFOLIO) as D on D.CIDCONCEPTODOCUMENTO = T0.CIDCONCEPTODOCUMENTO AND D.CFOLIO = T0.IDRECEPCIONMERCANCIA
-	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHADOCUMENTO)
-	LEFT JOIN Comercial.Comprobante T10 on left(T10.TipoComprobante,1)='I' and rtrim(T10.RFCEmisor) = rtrim(T2.RFC) and T10.Serie + T10.Folio = T0.NUMERODOCUMENTO
-  -- WHERE not exists (Select 1 from Comercial.Documento T1 Where T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA)
-  -- Filtros incluidos en RMPorTimbrar, para ganar eficiencia
-  -- year(dbo.fecha(FECHARECEPCION)) >= 2024
-  -- AND T0.Cerrada = 1
-  -- AND T0.Estado = 'Contabilizada'
-  -- -- and dbo.fecha(T0.FECHARECEPCION) >='20241101' included above
-  -- and T0.IDRECEPCIONMERCANCIA > 36081
-  -- and T0.IDRECEPCIONMERCANCIA not in (40384, 40639)
-  -- and T0.Tipo NOT IN ('Consignación')
+FROM Score.RMPorTimbrar
 
 /*UNION ALL
 -- Devoluciones a proveedores

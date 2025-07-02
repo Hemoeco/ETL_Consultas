@@ -37,8 +37,11 @@ where FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe()
 
 
 -- para comparar
-Select * from etlPrueba.dbo.Documentos
-Select * from Documentos
+Select * from etlPrueba.dbo.Documentos order by cIdDocumento
+Select * from Documentos order by cIdDocumento
+
+Select count(*) from etlPrueba.dbo.Documentos
+Select count(*) from Documentos
 
 Select * from [Score].[OTPorTimbrar]
 Select * from Documentos where cIdDocumento like 'ODT%'
@@ -50,5 +53,22 @@ Select * from etlPrueba.dbo.Movimientos
 Select * from Movimientos
 
 -- El mismo resultado en ambas consultas indica resultado correcto
-Select count(1) from etlPrueba.dbo.Documentos where cIdDocumento like 'REC%'
+Select count(1) from Documentos where cIdDocumento like 'REC%'
 Select count(1) from Score.RMPorTimbrar
+
+-- 
+USE ETLprueba
+GO
+Select * from Documentos
+Select count(*) from Documentos
+Select count(*) from Movimientos
+
+Select count(1) from Documentos where cIdDocumento like 'REC%'
+Select count(1) from Score.RMPorTimbrar
+Select * from Score.RMPorTimbrar
+
+Select count(1) from Documentos where cIdDocumento like 'ODT%'
+Select count(1) from Score.OTPorTimbrar
+Select * from Score.OTPorTimbrar
+
+Select dbo.Fecha(etlPrueba.dbo.fn_FechaIncluirAPartirDe())

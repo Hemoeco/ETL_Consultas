@@ -49,3 +49,13 @@ Select top 10 * from Comercial.Producto
 Select top 10 * from Comercial.TipoCambio
 Select top 10 * from Comercial.UnidadMedida
 */
+
+/* Clean up 
+DROP SYNONYM [Comercial].[Almacen]
+DROP SYNONYM [Comercial].Comprobante
+DROP SYNONYM [Comercial].Concepto
+DROP SYNONYM [Comercial].Documento
+DROP SYNONYM [Comercial].Parametro
+DROP SYNONYM [Comercial].Producto
+DROP SYNONYM [Comercial].TipoCambio
+*/

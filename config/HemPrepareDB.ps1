@@ -28,8 +28,11 @@ $Env:sqlcmdServer="192.168.111.13\COMPAC" # servidor de produccion
 # correr ETL_Users.sql para crear un usuario de pruebas con permisos para correr todos estos scripts.
 # $Env:sqlcmdDbName="etlHemoeco" # Prod!
 # $Env:sqlcmdDbName="etlPruebas" # pruebas
-# $Env:sqlcmdDbName="ETL_Prod_Cesar"
-$Env:sqlcmdDbName="ETL_Pruebas_Cesar"
+if ($configuracion -eq "prueba") {
+    $Env:sqlcmdDbName="ETL_Pruebas_Cesar"
+} elseif ($configuracion -eq "prod") {
+    $Env:sqlcmdDbName="ETL_Prod_Cesar"
+}
 
 # copiar usuario y contraseña de la variable de entorno
 $env:sqlcmdUser = $env:ETLUsuario
