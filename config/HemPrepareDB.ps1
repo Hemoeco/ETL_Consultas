@@ -86,6 +86,7 @@ try {
     
     # Views dependientes de tablas Score/Comercial
     ./RunSqlScript.ps1 ../Views/OTPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/RMPorTimbrar.sql
     ./RunSqlScript.ps1 ../Views/ProductoYUnidad.sql
     
     #requiere ProductoYUnidad

@@ -48,3 +48,7 @@ Select * from Documentos where cIdDocumento like 'REC%'
 
 Select * from etlPrueba.dbo.Movimientos
 Select * from Movimientos
+
+-- El mismo resultado en ambas consultas indica resultado correcto
+Select count(1) from etlPrueba.dbo.Documentos where cIdDocumento like 'REC%'
+Select count(1) from Score.RMPorTimbrar

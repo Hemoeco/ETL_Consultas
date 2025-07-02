@@ -22,10 +22,13 @@ As
 		NUMERODOCUMENTO,
 		IDSUCURSAL,
 		IDCENTROOPERATIVO,
-		PORCENTAJEIVA
+		PORCENTAJEIVA,
+		CO.cCodigoConcepto,
+		T3.cIdConceptoDocumento
 	from serverScore.IT_Rentas_Pruebas.dbo.OperRecepcionMercancia as RM
 		join FechaIncluirAPartirDe as F on FECHARECEPCION >= F.FechaCorte
 		join RMCentOper as CO on CO.IDRECEPCIONMERCANCIA = RM.IDRECEPCIONMERCANCIA
+		left JOIN adhemoeco_prueba.dbo.admConceptos T3 ON T3.CCODIGOCONCEPTO = CO.cCodigoConcepto
 	where Cerrada = 1
 		AND Estado = 'Contabilizada'
 		and RM.IDRECEPCIONMERCANCIA > 36081
@@ -34,8 +37,6 @@ As
 		-- and 0 = 1 -- Solo pruebas
 		and not exists (Select 1 
 						from adhemoeco_prueba.dbo.admDocumentos T1 
-							left JOIN adhemoeco_prueba.dbo.admConceptos T3
-								 ON T3.CCODIGOCONCEPTO = CO.cCodigoConcepto
 						Where T1.CCANCELADO=0 
 							and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO 
 							AND T1.CFOLIO = RM.IDRECEPCIONMERCANCIA)

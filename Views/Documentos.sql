@@ -185,7 +185,7 @@ SELECT 'REC' + CONVERT(varchar, T0.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	T0.FechaDocumentoStr AS cFecha,
 	T0.FechaDocumentoStr AS cFechaVencimiento,
 	CONVERT(VARCHAR(10), EOMONTH(dbo.Fecha(T0.FECHADOCUMENTO)), 101) AS cFechaEntregaRecepcion,
-	rtrim(T3.CCODIGOCONCEPTO) AS cCodigoConcepto,
+	T0.cCodigoConcepto,
 	'P' + REPLICATE('0', 5 - LEN(T0.IDPROVEEDOR)) + CONVERT(varchar, T0.IDPROVEEDOR) AS cCodigoCteProv,
 	case isnull(D.Num, 0) when 0 then rtrim(T5.INICIALES) else concat(rtrim(T5.INICIALES), D.Num + 1) end AS cSerieDocumento,
 	T0.IDRECEPCIONMERCANCIA AS cFolio,
@@ -216,8 +216,8 @@ FROM Score.RMPorTimbrar T0
 	INNER JOIN Score.Proveedor T2 ON T0.IDPROVEEDOR = T2.IDPROVEEDOR
 	INNER JOIN Score.ParaPreferencias T4 ON T4.IDPREFERENCIAS = 1
 	INNER JOIN Score.ParaCentOper T5 ON T0.IDCENTROOPERATIVO = T5.IDCENTROOPERATIVO
-	INNER JOIN Comercial.Concepto T3 ON T3.CCODIGOCONCEPTO = 'FACP' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(T0.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END
-	left JOIN (select CIDCONCEPTODOCUMENTO, CFOLIO, count(*) as Num from Comercial.Documento group by CIDCONCEPTODOCUMENTO, CFOLIO) as D on D.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND D.CFOLIO = T0.IDRECEPCIONMERCANCIA
+	-- INNER JOIN Comercial.Concepto T3 ON T3.CCODIGOCONCEPTO = 'FACP' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + CASE WHEN LEFT(T0.MONEDA, 1) = 'P' THEN 'N' ELSE 'E' END
+	left JOIN (select CIDCONCEPTODOCUMENTO, CFOLIO, count(*) as Num from Comercial.Documento group by CIDCONCEPTODOCUMENTO, CFOLIO) as D on D.CIDCONCEPTODOCUMENTO = T0.CIDCONCEPTODOCUMENTO AND D.CFOLIO = T0.IDRECEPCIONMERCANCIA
 	LEFT JOIN Comercial.TipoCambio AS T9 ON T9.Moneda = 2 AND T9.Tipo = 1 AND T9.Fecha = dbo.Fecha(T0.FECHADOCUMENTO)
 	LEFT JOIN Comercial.Comprobante T10 on left(T10.TipoComprobante,1)='I' and rtrim(T10.RFCEmisor) = rtrim(T2.RFC) and T10.Serie + T10.Folio = T0.NUMERODOCUMENTO
   -- WHERE not exists (Select 1 from Comercial.Documento T1 Where T1.CCANCELADO=0 and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO AND T1.CFOLIO = T0.IDRECEPCIONMERCANCIA)
@@ -282,7 +282,7 @@ SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 	T0.FechaTerminadoStr AS cFechaEntregaRecepcion,
 	T0.cCodigoConcepto,
 	'20902' AS cCodigoCteProv,
-	rtrim(T1.INICIALES) AS cSerieDocumento,
+	T0.Iniciales AS cSerieDocumento,
 	T0.NUMERO AS cFolio,
 	1 AS cIdMoneda,
 	1 AS cTipoCambio,
@@ -291,7 +291,7 @@ SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 	'' AS cTextoEx02,
 	'' AS cTextoEx03,
 	T0.IDSUCURSAL AS cImporteExtra1,
-	'Orden de trabajo ' + CONVERT(varchar, T0.NUMERO) + ', sucursal: ' + rtrim(T1.INICIALES) AS cObservaciones,
+	'Orden de trabajo ' + CONVERT(varchar, T0.NUMERO) + ', sucursal: ' + T0.Iniciales AS cObservaciones,
 	'(Ninguno)' AS cCodigoAgente,
 --	'' AS cNumeroG01, 
 	'' AS cNumCtaPag,
@@ -308,8 +308,8 @@ SELECT 'ODT' + CONVERT(varchar, T0.NUMERO) AS cIdDocumento,
 	'' as cDestinatario,
 	'' as cNumeroGuia
 FROM Score.OTPorTimbrar T0
-	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 -- Filtros y join incluidos en OTPorTimbrar
+--  INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
 --  join Comercial.Concepto as T2 on T2.CCODIGOCONCEPTO = 'ODT' + dbo.fn_StdCentOper(OT.IDCENTROOPERATIVO)
 --  left join Comercial.Documento as T3 on T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO
 --			AND T3.cFolio = OT.NUMERO -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
@@ -317,7 +317,9 @@ FROM Score.OTPorTimbrar T0
 --   AND T0.FACTURASNUMERO = 0
 --   and (select sum(CANTIDAD - CANTIDADDEVUELTA) from Score.OTRefaccion where ORDENESTRABAJONUMERO = T0.NUMERO) <> 0
 --   AND T3.cFolio is null
+
 UNION ALL
+
 -- Transpasos y requisiciones
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	T0.FechaRecibidaStr AS cFecha,
