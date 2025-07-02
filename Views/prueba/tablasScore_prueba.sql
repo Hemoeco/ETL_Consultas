@@ -99,39 +99,8 @@ if (Object_id('[Score].[EquipoUsado]') is null)
 GO
 
 -- Factura
-Create or alter view [Score].[Factura]
-As
-	-- opcionalemente podemos utilizar 'select *'
-	SELECT IDFACTURA,
-		IDSUCURSAL,
-		IDCENTROOPERATIVO,
-		CLIENTESNUMERO,
-		FOLIO,
-		IDEMPLEADO,
-		FECHA,
-		MONEDA,
-		FECHAVENCIMIENTO,
-		TOTAL,
-		SALDO,
-		FORMADEPAGO,
-		METODODEPAGO,
-		USOCFDI,
-		OBRASNUMERO,
-		TIPOCAMBIO,
-		IVA,
-		CANCELADA,
-		FOLIO2,
-		PROCESADA,
-		OBSERVACIONES,
-		ORDENDECOMPRA,
-		XML_ETIQUETA2,
-		XML_SUBTOTAL,
-		XML_TOTAL,
-		PORCENTAJEIVA,
-		dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
-		dbo.fn_FechaITaETL(FECHA) as FechaFacturaStr -- compartir esta fecha en varios puntos de Documentos,
-	FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
-GO
+if (Object_id('[Score].[Factura]') is null)
+	Create synonym [Score].[Factura] for serverScore.IT_Rentas_pruebas.dbo.OperFacturas
 
 -- FacturaPago
 if (Object_id('[Score].[FacturaPago]') is null)
@@ -144,7 +113,7 @@ As
 	-- documentos y movimientos
 	SELECT *,
 		dbo.Fecha(FECHA) as FechaFactura, -- compartir esta fecha en varios puntos de movimientos
-		CONVERT(VARCHAR(10), dbo.Fecha(FECHA), 101) as FechaFacturaStr -- compartir esta fecha en varios puntos de movimientos
+		dbo.fn_FechaITaETL(FECHA) as FechaFacturaStr -- compartir esta fecha en varios puntos de Documentos,
 	-- FROM Score.Factura -- llamar a la tabla remota directamente es ligeramente má eficiente
 	FROM serverScore.IT_Rentas_pruebas.dbo.OperFacturas
 		join FechaIncluirAPartirDe as F on FECHA >= F.FechaCorte
