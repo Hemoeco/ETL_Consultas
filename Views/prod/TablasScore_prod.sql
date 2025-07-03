@@ -161,6 +161,6 @@ Select count(1) as Depositos from Score.DepositoPorTimbrar
 Select count(1) as Facturas from Score.FacturaPorTimbrar
 Select count(1) as NotasDeCredito from Score.NotaDeCreditoPorTimbrar
 Select count(1) as OTs from Score.OTPorTimbrar
-Select count(1) as Requisiciones from Score.RequisicionPorTimbrar
+Select count(1) as Requisiciones from Score.RequisicionPorImportar
 Select count(1) as RMs from Score.RMPorTimbrar
 */

@@ -52,7 +52,7 @@ As
 		and RM.IDRECEPCIONMERCANCIA not in (40384, 40639)
 		and RM.Tipo NOT IN ('Consignación')
 		and not exists (Select 1 
-						from adhemoeco_prueba.dbo.admDocumentos T1 
+						from Comercial.Documento T1 
 						Where T1.CCANCELADO=0 
 							and T1.CIDCONCEPTODOCUMENTO = T3.CIDCONCEPTODOCUMENTO 
 							AND T1.CFOLIO = RM.IDRECEPCIONMERCANCIA)

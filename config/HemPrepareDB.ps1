@@ -88,9 +88,16 @@ try {
     # ./RunSqlScript.ps1 ../Functions/$configuracion/fn_GetIdConFacOriginalUnico_$configuracion.sql utilizar 'IdConFacOriginalUnico' en lugar de esta funcion
     
     # Views dependientes de tablas Score/Comercial
-    ./RunSqlScript.ps1 ../Views/OTPorTimbrar.sql
-    ./RunSqlScript.ps1 ../Views/RMPorTimbrar.sql
-    ./RunSqlScript.ps1 ../Views/ProductoYUnidad.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/DepositoPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/EquipoRentaPorImportar.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/FacturaPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/NotaDeCreditoPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/OTPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/RMPorTimbrar.sql
+    ./RunSqlScript.ps1 ../Views/PorTimbrar/RequisicionPorImportar.sql
+    ./RunSqlScript.ps1 ../Views/Hemoeco/LineaCodSAT.sql
+    ./RunSqlScript.ps1 ../Views/Hemoeco/ProductoYUnidad.sql
+    ./RunSqlScript.ps1 ../Views/Hemoeco/RefaccionConCodSAT.sql
     
     #requiere ProductoYUnidad
     ./RunSqlScript.ps1 ../Functions/fn_ConsultarCodigoProducto.sql

@@ -309,7 +309,7 @@ SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 	ISNULL(S0.COSTONACIONAL, 0) + ISNULL(S1.COSTONACIONAL, 0) + ISNULL(S2.COSTONACIONAL, 0) + ISNULL(S3.COSTOUNITARIO, isnull(T1.COSTO, 0)) AS cImporteExtra2,
 --	A2.CSCALMAC2 as cSCMovto
 	A1.CSCALMAC2 as cSCMovto
-FROM Score.RequisicionPorTimbrar T0
+FROM Score.RequisicionPorImportar T0
 	inner join Score.ConReq T1 on T0.IDREQUISICION=T1.IDREQUISICION
 	inner join AlmacenConReq as alm on alm.IDCONREQ = T1.IDCONREQ
 	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + alm.CodigoAlmacen
@@ -343,7 +343,7 @@ SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	0 AS cImporteExtra1,
 	0 AS cImporteExtra2,
 	A2.CSCALMAC2 as cSCMovto
-FROM Score.EquipoRentaDadoDeAlta T0
+FROM Score.EquipoRentaPorImportar T0
 	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'ENUE'
 	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'EREN'
 GO
