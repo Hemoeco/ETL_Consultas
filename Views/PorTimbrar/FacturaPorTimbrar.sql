@@ -38,7 +38,7 @@ As
 	SELECT pers.*,
 			-- dbo.fn_GetIdConFacOriginalUnico(pers.Id) as IdConFac  puede reemplazarse con 'IdConFacOriginal', que ahora siempre se llena
 			IdConFacOriginal as IdConFac
-	FROM serverScore.IT_Rentas_pruebas.dbo.OperConFacPers as pers
+	FROM Score.ConFacPers as pers
 		join Score.FacturaPorTimbrar as f on f.IDFACTURA = pers.FacturasNumero
 GO
 

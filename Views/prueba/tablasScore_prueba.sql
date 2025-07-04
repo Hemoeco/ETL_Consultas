@@ -22,6 +22,10 @@ if (Object_id('[Score].[ConDev]') is null)
 if (Object_id('[Score].[ConFac]') is null)
 	Create Synonym [Score].[ConFac] for serverScore.IT_Rentas_pruebas.dbo.OperConFac
 
+-- Concepto personalziado factura
+if (Object_id('[Score].[ConFacPers]') is null)
+	Create Synonym [Score].[ConFacPers] for serverScore.IT_Rentas_pruebas.dbo.OperConFacPers
+
 -- Concepto ndc
 if (Object_id('[Score].[ConNot]') is null)
 	Create Synonym [Score].[ConNot] for serverScore.IT_Rentas_pruebas.dbo.OperConNot
