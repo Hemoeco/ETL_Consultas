@@ -11,6 +11,6 @@ As
         CNOMBREPRODUCTO, 
         p.CCLAVESAT as claveProdServSAT, 
         CCLAVEINT as claveUnidadSAT
-	FROM Comercial.Producto AS p
-		JOIN Comercial.UnidadMedida AS adu ON adu.CIDUNIDAD = p.CIDUNIDADBASE
+	FROM Comercial.Producto AS p with(nolock)
+		JOIN Comercial.UnidadMedida AS adu with(nolock) ON adu.CIDUNIDAD = p.CIDUNIDADBASE
 GO

@@ -22,13 +22,17 @@ As
 		INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVOORIGEN = T1.IDCENTROOPERATIVO
 		inner join Comercial.Concepto T2 on T2.CCODIGOCONCEPTO = 'REQ' + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN)
 	where T0.IDREQUISICION > 8492
-		and not exists (select 1 from Comercial.Documento T3 
+		and not exists (select 1 from Comercial.Documento T3 with(nolock) 
 							where T3.CIDCONCEPTODOCUMENTO = T2.CIDCONCEPTODOCUMENTO 
-							AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
-							AND T3.cFolio = T0.IDREQUISICION)
+								AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES) 
+								AND T3.cFolio = T0.IDREQUISICION)
 		-- and 0 = 1 -- Solo pruebas
 Go
 
 -- Eliminar el view anterior, reemplazado con este
 if (Object_Id('Score.RequisicionPorTimbrar') is not null)
 	drop view Score.RequisicionPorTimbrar
+
+-- test
+-- Select count(*) as cuenta from Score.RequisicionPorImportar
+-- Select * from Score.RequisicionPorImportar

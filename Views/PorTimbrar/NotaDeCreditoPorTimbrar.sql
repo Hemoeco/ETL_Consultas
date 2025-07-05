@@ -11,7 +11,6 @@ As
 	WITH ConceptosAgrupados AS (
 		SELECT S0.IDNOTASCREDITO, 
 			MAX(S0.TIPO) as TIPO, 
-			count(distinct S0.TIPO) as Num,
 			MAX(S1.MTIPO) as TIPO2
 		FROM Score.ConNot S0
 		INNER JOIN Score.ConFac S1 ON S0.IDCONFAC = S1.IDCONFAC
@@ -25,7 +24,6 @@ As
 		T0.CLIENTESNUMERO,
 		T6.TIPO as TipoConceptoAgrupado,
 		T6.TIPO2 as Tipo2ConceptoAgrupado,
-		T6.Num as NumConceptoAgrupado,
 		T0.Moneda,
 		T0.AUTORIZADAPOR,
 		T0.IDSUCURSAL,
@@ -46,7 +44,7 @@ As
 	WHERE TOTAL <> 0
 		AND T0.IDNOTASCREDITO <> (32977)
 		AND CERRADO = 'S'
-		and not exists (select 1 from Comercial.Documento T5 
+		and not exists (select 1 from Comercial.Documento T5 with(nolock) 
 							Where T5.CIDCONCEPTODOCUMENTO = T4.CIDCONCEPTODOCUMENTO 
 							AND  T5.CTEXTOEXTRA1 = CONVERT(varchar, T0.IDNOTASCREDITO)
 							AND T5.cCancelado = 0)

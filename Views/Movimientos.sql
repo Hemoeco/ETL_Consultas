@@ -84,11 +84,11 @@ MovConFacStd as (
 	FROM Score.ConFacPorTimbrar AS T0
 		join CantidadConFac as ccf on ccf.IDCONFAC = T0.IDCONFAC -- Conversion Score
 		INNER JOIN Score.FacturaPorTimbrar AS T1 ON T0.FACTURASNUMERO = T1.IDFACTURA
-		LEFT JOIN Score.EquipoNuevo T2 ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
-		LEFT JOIN Score.EquipoRenta T4 on T4.IDEQUIPO = T0.IDEQUIPORENTA
-		LEFT JOIN Score.EquipoUsado AS T5 ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
-		LEFT JOIN Score.OTRefaccion AS T3 ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
-		LEFT JOIN Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+		LEFT JOIN Score.EquipoNuevo T2 with(nolock) ON T2.IDEQUIPO = T0.IDEQUIPONUEVO
+		LEFT JOIN Score.EquipoRenta T4 with(nolock) on T4.IDEQUIPO = T0.IDEQUIPORENTA
+		LEFT JOIN Score.EquipoUsado AS T5 with(nolock) ON T0.IDEQUIPOUSADO = T5.IDEQUIPO
+		LEFT JOIN Score.OTRefaccion AS T3 with(nolock) ON T0.OTRLLAVEAUTONUMERICA = T3.IDOTREFACCIONES	
+		LEFT JOIN Comercial.Producto AS prod with(nolock) ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 ),
 MovConFacPers as (
 	SELECT CONCAT('FAC', pers.FacturasNumero) AS cIdDocumento,
@@ -127,11 +127,11 @@ MovConFacPers as (
 			join ConFacPersCodigoProd as ccf on ccf.Id = pers.Id
 			join Score.FacturaPorTimbrar AS f ON f.IDFACTURA = pers.FacturasNumero
 			join Score.ConFacPorTimbrar as con on con.IDCONFAC = pers.IdConFac
-			left join Score.EquipoNuevo AS eqn ON eqn.IDEQUIPO = con.IDEQUIPONUEVO
-			left join Score.EquipoRenta AS eqr on eqr.IDEQUIPO = con.IDEQUIPORENTA
-			left join Score.EquipoUsado AS equ ON equ.IDEQUIPO = con.IDEQUIPOUSADO
-			left join Score.OTRefaccion AS ref ON ref.IDOTREFACCIONES = con.OTRLLAVEAUTONUMERICA
-			left join Comercial.Producto AS prod ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
+			left join Score.EquipoNuevo AS eqn with(nolock) ON eqn.IDEQUIPO = con.IDEQUIPONUEVO
+			left join Score.EquipoRenta AS eqr with(nolock) on eqr.IDEQUIPO = con.IDEQUIPORENTA
+			left join Score.EquipoUsado AS equ with(nolock) ON equ.IDEQUIPO = con.IDEQUIPOUSADO
+			left join Score.OTRefaccion AS ref with(nolock) ON ref.IDOTREFACCIONES = con.OTRLLAVEAUTONUMERICA
+			left join Comercial.Producto AS prod with(nolock) ON prod.CCODIGOPRODUCTO = ccf.codigoProducto
 		-- No funciona Order by pers.FacturasNumero, Ordinal, con.MTIPO, pers.Cantidad, pers.ValorUnitario
 		-- todo: Order by Ordinal
 ), -- Select * from MovConFacPers -- test
@@ -152,15 +152,13 @@ AlmacenConReq as (
 				else 'TRAN'
 			end as CodigoAlmacen
 	from Score.ConReq
-),
-FechaHoyIT as (
-	-- calcular fecha IT hoy uan vez
-	select dbo.fn_FechaIT(getdate()) as Hoy
 )
 
 -- Movimientos/Conceptos de Factura
 SELECT * FROM MovConFac
+
 UNION ALL
+
 SELECT CONCAT('NC', T0.IDNOTASCREDITO) AS cIdDocumento,
 	case 
 		when T0.TIPO='Anticipo' then 'ANT'
@@ -201,14 +199,16 @@ SELECT CONCAT('NC', T0.IDNOTASCREDITO) AS cIdDocumento,
 FROM Score.ConNot T0
 	INNER JOIN Score.NotaDeCreditoPorTimbrar T1 ON T0.IDNOTASCREDITO = T1.IDNOTASCREDITO
 	INNER JOIN Score.ConFac T2 ON T0.IDCONFAC = T2.IDCONFAC
-	LEFT OUTER JOIN Score.EquipoNuevo AS S2 ON T2.IDEQUIPONUEVO = S2.IDEQUIPO AND T2.DELAL = 'Venta'
-	LEFT OUTER JOIN Score.EquipoRenta AS S3 ON T2.IDEQUIPORENTA = S3.IDEQUIPO AND T2.DELAL = 'Venta'
-	LEFT OUTER JOIN Score.EquipoUsado AS S4 ON T2.IDEQUIPOUSADO = S4.IDEQUIPO AND T2.DELAL = 'Venta'
+	LEFT OUTER JOIN Score.EquipoNuevo AS S2 with(nolock) ON T2.IDEQUIPONUEVO = S2.IDEQUIPO AND T2.DELAL = 'Venta'
+	LEFT OUTER JOIN Score.EquipoRenta AS S3 with(nolock) ON T2.IDEQUIPORENTA = S3.IDEQUIPO AND T2.DELAL = 'Venta'
+	LEFT OUTER JOIN Score.EquipoUsado AS S4 with(nolock) ON T2.IDEQUIPOUSADO = S4.IDEQUIPO AND T2.DELAL = 'Venta'
 	LEFT OUTER JOIN Score.LineaSucursal AS S5 ON T2.IDLINEA = S5.IDLINEA AND T2.IDSUCURSAL = S5.IDSUCURSAL
-	LEFT OUTER JOIN Score.OTRefaccion AS S6 ON T2.OTRLLAVEAUTONUMERICA = S6.IDOTREFACCIONES
+	LEFT OUTER JOIN Score.OTRefaccion AS S6 with(nolock) ON T2.OTRLLAVEAUTONUMERICA = S6.IDOTREFACCIONES
 WHERE T0.CANTIDAD > 0
 	and T0.Tipo <> 'Descuento'
+
 UNION ALL
+
 SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	case when T0.IDREFACCION + T0.IDMODELO = 0 then '6111100002' else case when T0.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + '001' end AS cCodigoProducto, 
 	T0.CANTIDADRECIBIDA AS cUnidades,
@@ -230,8 +230,8 @@ SELECT 'REC' + rtrim(T1.IDRECEPCIONMERCANCIA) AS cIdDocumento,
 	'' as cSCMovto
 from Score.ConRM T0
 	inner join Score.RMPorTimbrar T1 on T0.IDRECEPCIONMERCANCIA = T1.IDRECEPCIONMERCANCIA
-	left join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
-	left join Score.Modelo T3 on T0.IDMODELO = T3.IDMODELO
+	left join Score.Refaccion T2 with(nolock) on T0.IDREFACCION = T2.IDREFACCION
+	left join Score.Modelo T3 with(nolock) on T0.IDMODELO = T3.IDMODELO
 -- where T1.FECHARECEPCION >= dbo.fn_FechaIncluirAPartirDe() -- incluida en 'RMPorTimbrar'
 /*UNION ALL
 SELECT 'DEV' + CONVERT(varchar, T0.IDDEVOLUCION) AS cIdDocumento,
@@ -257,7 +257,9 @@ from Score.ConDev T0
 	left join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 	left join Score.Modelo T3 on T0.IDMODELO = T3.IDMODELO
 */
+
 UNION ALL
+
 SELECT 'ODT' + rtrim(T0.ORDENESTRABAJONUMERO) AS cIdDocumento,
 	case when T0.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + '001' AS cCodigoProducto, 
 	T0.CANTIDAD - T0.CANTIDADDEVUELTA AS cUnidades,
@@ -277,15 +279,13 @@ SELECT 'ODT' + rtrim(T0.ORDENESTRABAJONUMERO) AS cIdDocumento,
 	0 AS cImporteExtra2,
 	'' as cSCMovto
 from Score.OTRefaccion T0
-	INNER JOIN Score.ParaCentOper T1 ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
-	inner join Score.Refaccion T2 on T0.IDREFACCION = T2.IDREFACCION
 	join Score.OTPorTimbrar as OT on OT.NUMERO = T0.ORDENESTRABAJONUMERO
-	cross join FechaIncluirAPartirDe as F
-	cross join FechaHoyIT as H
+	INNER JOIN Score.ParaCentOper T1 with(nolock) ON T0.IDCENTROOPERATIVO = T1.IDCENTROOPERATIVO
+	inner join Score.Refaccion T2 with(nolock) on T0.IDREFACCION = T2.IDREFACCION
 where T0.CANTIDAD - T0.CANTIDADDEVUELTA <> 0
-	-- todo: Right filter?
-	and OT.FECHATERMINADO between F.FechaCorte and H.Hoy
+
 union all
+
 SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 --	case when T1.IDREFACCION + T1.IDMODELO = 0 then 'SRV' else case when T1.IDREFACCION <> 0 then '11602' else '11601' end + dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + '001' end AS cCodigoProducto,
 	A1.CSCALMAC2 AS cCodigoProducto,
@@ -312,14 +312,14 @@ SELECT 'REQ' + CONVERT(varchar, T0.IDREQUISICION) AS cIdDocumento,
 FROM Score.RequisicionPorImportar T0
 	inner join Score.ConReq T1 on T0.IDREQUISICION=T1.IDREQUISICION
 	inner join AlmacenConReq as alm on alm.IDCONREQ = T1.IDCONREQ
-	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + alm.CodigoAlmacen
-	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + alm.CodigoAlmacen
-	LEFT JOIN Score.EquipoNuevo AS S0 ON T1.IDEQUIPONUEVO = S0.IDEQUIPO
-	LEFT JOIN Score.EquipoRenta AS S1 ON T1.IDEQUIPORENTA = S1.IDEQUIPO
-	LEFT JOIN Score.EquipoUsado AS S2 ON T1.IDEQUIPOUSADO = S2.IDEQUIPO
-	LEFT JOIN Score.KardexAlta AS S3 ON T1.IDCONREQ = S3.IDCONREQ AND T1.IDREQUISICION = S3.DOCUMENTONUMERO
-	LEFT JOIN Score.Linea S4 ON S4.IDLINEA = ISNULL(S0.IDLINEA, 0) + ISNULL(S1.IDLINEA, 0) + ISNULL(S2.IDLINEA, 0)
-	LEFT JOIN Score.LineaSucursal S5 ON S4.IDLINEA = S5.IDLINEA AND T0.IDSUCURSALORIGEN = S5.IDSUCURSAL
+	INNER JOIN Comercial.Almacen A1 with(nolock) ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVOORIGEN) + alm.CodigoAlmacen
+	INNER JOIN Comercial.Almacen A2 with(nolock) ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T1.IDCENTROOPERATIVO) + alm.CodigoAlmacen
+	LEFT JOIN Score.EquipoNuevo AS S0 with(nolock) ON T1.IDEQUIPONUEVO = S0.IDEQUIPO
+	LEFT JOIN Score.EquipoRenta AS S1 with(nolock) ON T1.IDEQUIPORENTA = S1.IDEQUIPO
+	LEFT JOIN Score.EquipoUsado AS S2 with(nolock) ON T1.IDEQUIPOUSADO = S2.IDEQUIPO
+	LEFT JOIN Score.KardexAlta AS S3 with(nolock) ON T1.IDCONREQ = S3.IDCONREQ AND T1.IDREQUISICION = S3.DOCUMENTONUMERO
+	LEFT JOIN Score.Linea S4 with(nolock) ON S4.IDLINEA = ISNULL(S0.IDLINEA, 0) + ISNULL(S1.IDLINEA, 0) + ISNULL(S2.IDLINEA, 0)
+	LEFT JOIN Score.LineaSucursal S5 with(nolock) ON S4.IDLINEA = S5.IDLINEA AND T0.IDSUCURSALORIGEN = S5.IDSUCURSAL
 	-- todo: Filter results? in Documentos, this is a subquery
 	-- join FechaIncluirAPartirDe as fc on T1.FECHARECIBIDA >= fc.Fecha																	
 
@@ -344,8 +344,8 @@ SELECT 'TR' + CONVERT(varchar, T0.IDEQUIPO) AS cIdDocumento,
 	0 AS cImporteExtra2,
 	A2.CSCALMAC2 as cSCMovto
 FROM Score.EquipoRentaPorImportar T0
-	INNER JOIN Comercial.Almacen A1 ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'ENUE'
-	INNER JOIN Comercial.Almacen A2 ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'EREN'
+	INNER JOIN Comercial.Almacen A1 with(nolock) ON A1.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'ENUE'
+	INNER JOIN Comercial.Almacen A2 with(nolock) ON A2.ccodigoalmacen = dbo.fn_StdCentOper(T0.IDCENTROOPERATIVO) + 'EREN'
 GO
 
 -- -- Tests

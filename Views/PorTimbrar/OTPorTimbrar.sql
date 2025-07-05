@@ -48,7 +48,7 @@ As
 		join Comercial.Concepto as con on con.CCODIGOCONCEPTO = CO.cCodigoConcepto
 	WHERE FACTURASNUMERO = 0
 		and not exists (Select 1 
-						from Comercial.Documento as doc
+						from Comercial.Documento as doc with (nolock)
 						where doc.CIDCONCEPTODOCUMENTO = con.CIDCONCEPTODOCUMENTO AND doc.cFolio = OT.NUMERO) -- AND T3.CSERIEDOCUMENTO=rtrim(T1.INICIALES)
 GO
 
