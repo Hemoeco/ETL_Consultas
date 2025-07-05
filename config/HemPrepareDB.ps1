@@ -26,11 +26,11 @@ $Env:sqlcmdServer="192.168.111.13\COMPAC" # servidor de produccion
 # la base de datos a utilizar debe existir, crearla con un usuario que tenga permisos adecuados,
 # después correr el script ConfigDB.sql para crear los servidores relacionados. Opcionalmente, puede
 # correr ETL_Users.sql para crear un usuario de pruebas con permisos para correr todos estos scripts.
-# $Env:sqlcmdDbName="etlHemoeco" # Prod!
-# $Env:sqlcmdDbName="etlPruebas" # pruebas
 if ($configuracion -eq "prueba") {
+    # $Env:sqlcmdDbName="etlPruebas" # pruebas
     $Env:sqlcmdDbName="ETL_Pruebas_Cesar"
 } elseif ($configuracion -eq "prod") {
+    # $Env:sqlcmdDbName="etlHemoeco" # Prod!
     $Env:sqlcmdDbName="ETL_Prod_Cesar"
 }
 
